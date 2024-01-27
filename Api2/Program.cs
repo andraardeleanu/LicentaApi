@@ -1,6 +1,9 @@
-using Api2;
 using Api2.Infrastructure;
 using Infra;
+using Core;
+using FluentValidation.AspNetCore;
+using FluentValidation;
+using Api2.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
@@ -15,9 +18,12 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDatabaseContext(config.GetConnectionString("DefaultConnection")!);
 builder.Services.AddMvc();
 builder.Services.AddCors();
-builder.Services.ResolveDependencies();
 builder.Services.AddAuth();
 builder.Services.AddSwaggerSetup();
+builder.Services.RegisterCoreDependencies();
+
+builder.Services.AddValidatorsFromAssemblyContaining<CompanyValidator>();
+builder.Services.AddFluentValidationAutoValidation();
 
 
 var app = builder.Build();

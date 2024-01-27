@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
-using System;
 using Infra.Data.Auth;
 using Infra.Data;
 
@@ -11,11 +10,6 @@ namespace Api2.Infrastructure
 {
     public static class DependencyResolution
     {
-        public static void ResolveDependencies(this IServiceCollection services)
-        {
-            //services.AddTransient<IArticleService, ArticleService>();
-        }
-
         public static void AddSwaggerSetup(this IServiceCollection services)
         {
             services.AddSwaggerGen(c =>

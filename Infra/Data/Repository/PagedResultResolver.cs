@@ -1,7 +1,7 @@
 ﻿using Core.Common;
 using Microsoft.EntityFrameworkCore;
 
-namespace Infra.Data
+namespace Infra.Data.Repository
 {
     public static class PagedResultResolver
     {

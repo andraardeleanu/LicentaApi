@@ -1,7 +1,8 @@
-﻿using Infra.Data.Auth;
+﻿using Core.Entities;
+using Infra.Data.Auth;
+using Infra.Data.Config;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-
 
 namespace Infra.Data
 {
@@ -12,22 +13,25 @@ namespace Infra.Data
             : base(options)
         {
         }
-        /*
-        public DbSet<Order> Orders { get; set; }
+        
+        public DbSet<Bill> Bills { get; set; }
         public DbSet<WorkPoint> WorkPoints{ get; set; }
         public DbSet<Company> Companies { get; set; }
-        public DbSet<File> Files { get; set; }
-        public DbSet<NewsletterSubscription> NewsletterSubscriptions { get; set; }
-        public DbSet<Comment> Comments { get; set; } 
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<Product> Products { get; set; }
+        public DbSet<Stock> Stocks { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            /*
-            modelBuilder.ApplyConfiguration(new NewsletterConfiguration());
-            modelBuilder.ApplyConfiguration(new ArticleConfiguration());
-        
-        }*/
+            
+            modelBuilder.ApplyConfiguration(new BillConfiguration());
+            modelBuilder.ApplyConfiguration(new CompanyConfiguration());
+            modelBuilder.ApplyConfiguration(new OrderConfiguration());
+            modelBuilder.ApplyConfiguration(new ProductConfiguration());
+            modelBuilder.ApplyConfiguration(new StockConfiguration());
+            modelBuilder.ApplyConfiguration(new WorkpointConfiguration());
+        }
 
         public override int SaveChanges()
         {

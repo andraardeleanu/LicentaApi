@@ -6,14 +6,13 @@ using System.Threading.Tasks;
 
 namespace Core.Entities
 {
-    public class Bills
+    public class Bill : BaseEntity
     {
         public DateTime Date {  get; set; }
-        public string OrderNo { get; set; }
-        public int CompanyId { get; set; }
-        public int WorkPointId { get; set; }
-        public double TotalPrice { get; set; }
+        public string OrderNo { get; set; }               
+        public decimal TotalPrice { get; set; }
         public string Status { get; set; }
-
+        public int OrderId { get; set; }
+        public virtual Order Order { get; set; }
     }
 }

@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace Core.Entities
 {
-    public class Company
+    public class Company : BaseEntity
     {
         public string Name { get; set; }
-        public string Cui {  get; set; }
+        public string Cui {  get; set; }        
     }
 }

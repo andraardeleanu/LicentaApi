@@ -11,7 +11,7 @@ namespace Api2.ApiModels
         public string LastName { get; set; }
 
         [Required(ErrorMessage = "Company is required")]
-        public string CompanyId { get; set; }
+        public int CompanyId { get; set; }
 
         [Required(ErrorMessage = "Username is required")]
         public string Username { get; set; }
@@ -19,5 +19,7 @@ namespace Api2.ApiModels
         [Required(ErrorMessage = "Password is required")]
         public string Password { get; set; }
 
+        [Required(ErrorMessage = "Email is required")]
+        public string Email { get; set; }
     }
 }

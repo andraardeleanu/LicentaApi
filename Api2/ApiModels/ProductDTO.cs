@@ -2,14 +2,16 @@
 {
     public class ProductDTO
     {
-        public string Id { get; set; }
+        public int Id { get; set; }
         public string Name { get; set; }
-        public string Price { get; set; }
-        public ProductDTO(string id, string name, string price)
+        public decimal Price { get; set; }
+        public string Author { get; set; }
+        public ProductDTO(int id, string name, decimal price, string author)
         {
             Id = id;
             Name = name;
             Price = price;
+            Author = Author;
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Core.Entities;
+using Microsoft.AspNetCore.Identity;
 
 namespace Infra.Data.Auth
 {
@@ -7,5 +8,6 @@ namespace Infra.Data.Auth
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public int CompanyId { get; set; }
+        public virtual Company Company { get; set; }
     }
 }

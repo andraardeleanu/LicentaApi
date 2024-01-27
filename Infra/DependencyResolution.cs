@@ -1,4 +1,6 @@
-﻿using Infra.Data;
+﻿using Core.Interfaces;
+using Infra.Data;
+using Infra.Data.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,6 +12,12 @@ namespace Infra
         {
             services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(connectionString)).AddOptions();
+            services.RegisterRepositories();
+        }
+
+        public static void RegisterRepositories(this IServiceCollection services)
+        {
+            services.AddScoped<IRepository, Repository>();
         }
     }
 }
