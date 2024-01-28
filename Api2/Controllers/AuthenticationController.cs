@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
-using System.Net;
 using System.Security.Claims;
 using System.Text;
 
@@ -111,28 +110,28 @@ namespace Api2.Controllers
                 expiration = token.ValidTo
             });
         }
-        
+
         [HttpPost("register")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> RegisterinAsync([FromBody] RegisterDTO model)
         {
-            var existingUser = await _userManager.FindByNameAsync(model.Username);            
+            var existingUser = await _userManager.FindByNameAsync(model.Username);
             if (existingUser != null) return Unauthorized("Username already exists! Try to choose another one.");
             var appUser = new ApplicationUser
             {
-                Email =  model.Email,
+                Email = model.Email,
                 UserName = model.Username,
                 FirstName = model.FirstName,
                 LastName = model.LastName,
                 CompanyId = model.CompanyId,
                 SecurityStamp = Guid.NewGuid().ToString(),
-            }; 
+            };
             var user = await _userManager.CreateAsync(appUser, model.Password);
 
             var role = await _userManager.AddToRoleAsync(appUser, "Customer");
 
-            return Created();            
-        }        
+            return Created();
+        }
 
         [HttpPatch("changePassword")]
         [Authorize]
@@ -146,6 +145,15 @@ namespace Api2.Controllers
                 return Ok();
 
             return BadRequest(changePassword.Errors.FirstOrDefault()?.Code);
+        }
+
+        [HttpGet]
+        [Authorize]
+        [Route("getUsersFromCompany")]
+        public IActionResult GetUsersFromCompanyAsync(int companyId)
+        {
+            var companyUsers = _userManager.Users.Where(u => u.CompanyId == companyId);
+            return Ok(companyUsers);
         }
     }
 }

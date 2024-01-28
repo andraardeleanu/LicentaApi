@@ -4,6 +4,7 @@ using Api2.Requests;
 using Core.Entities;
 using Core.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -12,10 +13,12 @@ namespace Api2.Controllers
     public class WorkPointController : ControllerBase
     {
         private readonly IGenericService<WorkPoint> _workpointService;
+        private readonly IGenericService<Company> _companyService;
 
-        public WorkPointController(IGenericService<WorkPoint> workpointService)
+        public WorkPointController(IGenericService<WorkPoint> workpointService, IGenericService<Company> companyService)
         {
             _workpointService = workpointService;
+            _companyService = companyService;
         }
 
         [HttpGet]
@@ -67,6 +70,15 @@ namespace Api2.Controllers
             await _workpointService.DeleteAsync(workpoint);
 
             return Ok();
+        }
+
+        [HttpGet]
+        [Authorize]
+        [Route("getWorkpointsFromCompany")]
+        public async Task<IActionResult> GetWorkpointsFromCompany(int companyId)
+        {
+            var companyWorkpoints = await _workpointService.WhereAsync(x => x.CompanyId == companyId);
+            return Ok(companyWorkpoints);
         }
     }
 }

@@ -15,6 +15,8 @@ namespace Core
             services.AddTransient<IGenericService<Product>, GenericService<Product>>();
             services.AddTransient<IGenericService<Stock>, GenericService<Stock>>();
             services.AddTransient<IGenericService<WorkPoint>, GenericService<WorkPoint>>();
+            services.AddTransient<IGenericService<OrderProduct>, GenericService<OrderProduct>>();
+            services.AddTransient<ICompanyService, CompanyService>();
         }
     }
 }
