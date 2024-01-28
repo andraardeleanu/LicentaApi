@@ -29,6 +29,16 @@ namespace Api2.Controllers
             return new JsonResult(dtoList);
         }
 
+        [HttpGet]
+        [Authorize]
+        [Route("getCompanyById/{id}")]
+        public async Task<IActionResult> GetCompanyAsync(int id)
+        {
+            var company = await _companyService.GetByIdAsync(id);
+
+            return new JsonResult(company);
+        }
+
         [HttpPost]
         [Authorize]
         [Route("addCompany")]
