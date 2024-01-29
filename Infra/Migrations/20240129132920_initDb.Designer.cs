@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infra.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240124100220_inittables")]
-    partial class inittables
+    [Migration("20240129132920_initDb")]
+    partial class initDb
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -142,6 +142,39 @@ namespace Infra.Migrations
                     b.ToTable("Orders");
                 });
 
+            modelBuilder.Entity("Core.Entities.OrderProduct", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Author")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DateUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("OrderProduct");
+                });
+
             modelBuilder.Entity("Core.Entities.Product", b =>
                 {
                     b.Property<int>("Id")
@@ -164,15 +197,10 @@ namespace Infra.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("OrderId")
-                        .HasColumnType("int");
-
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("OrderId");
 
                     b.ToTable("Products");
                 });
@@ -483,11 +511,23 @@ namespace Infra.Migrations
                     b.Navigation("WorkPoint");
                 });
 
-            modelBuilder.Entity("Core.Entities.Product", b =>
+            modelBuilder.Entity("Core.Entities.OrderProduct", b =>
                 {
-                    b.HasOne("Core.Entities.Order", null)
-                        .WithMany("Products")
-                        .HasForeignKey("OrderId");
+                    b.HasOne("Core.Entities.Order", "Order")
+                        .WithMany("OrderProduct")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Core.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("Core.Entities.Stock", b =>
@@ -576,7 +616,7 @@ namespace Infra.Migrations
 
             modelBuilder.Entity("Core.Entities.Order", b =>
                 {
-                    b.Navigation("Products");
+                    b.Navigation("OrderProduct");
                 });
 #pragma warning restore 612, 618
         }
