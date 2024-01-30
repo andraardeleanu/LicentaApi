@@ -21,10 +21,10 @@ namespace Api2.Controllers
         [HttpGet]
         [Authorize]
         [Route("getCompanies")]
-        public async Task<IActionResult> GetCompanyAsync()
+        public async Task<IActionResult> GetCompaniesAsync()
         {
             var companies = await _companyService.ListAsync();
-            var dtoList = companies.Select(x => new CompanyDTO(x.Id, x.Name, x.Cui, x.Author, x.DateCreated));
+            var dtoList = companies.Select(x => new CompanyDTO(x.Id, x.Name, x.Cui, x.Author, x.DateCreated, x.DateUpdated));
 
             return new JsonResult(dtoList);
         }

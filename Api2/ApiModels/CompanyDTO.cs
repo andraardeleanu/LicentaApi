@@ -7,13 +7,15 @@
         public string Cui { get; set; }
         public string Author { get; set; }
         public DateTime DateCreated { get; set; }
-        public CompanyDTO(int id, string name, string cui, string author, DateTime dateCreated)
+        public DateTime DateUpdated { get; set; }
+        public CompanyDTO(int id, string name, string cui, string author, DateTime dateCreated, DateTime dateUpdated)
         {
             Id = id;
             Name = name;
             Cui = cui;
             Author = author;
             DateCreated = dateCreated;
+            DateUpdated = dateUpdated;
         }
     }
 }
