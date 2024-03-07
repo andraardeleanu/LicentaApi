@@ -44,7 +44,7 @@ namespace Api2.Controllers
                 UserName = username,
                 FirstName = "Andra",
                 LastName = "Donca",
-                CompanyId = 2,
+                CompanyId = 1,
             };
 
             var role = new IdentityRole
@@ -112,7 +112,7 @@ namespace Api2.Controllers
         }
 
         [HttpPost("register")]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> RegisterinAsync([FromBody] RegisterDTO model)
         {
             var existingUser = await _userManager.FindByNameAsync(model.Username);
