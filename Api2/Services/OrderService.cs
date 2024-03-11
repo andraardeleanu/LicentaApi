@@ -20,11 +20,10 @@ namespace Core.Services
             _productService = productService;
         }
 
-        public async Task<bool> AddOrderAsync(OrderRequest orderRequest)
+        public async Task<bool> AddOrderAsync(OrderRequest orderRequest,string username)
         {
             try
             {
-                var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "admin";
                 var orderEntity = OrderMapper.ToOrderEntityCreate(orderRequest, username);
                 var order = await _orderService.AddAsync(orderEntity);
                 if (order?.Id != null)

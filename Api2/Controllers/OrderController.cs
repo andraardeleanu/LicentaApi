@@ -52,7 +52,9 @@ namespace Api2.Controllers
         [Route("addOrder")]
         public async Task<IActionResult> CreateOrderAsync([FromBody] OrderRequest orderRequest)
         {
-            var res = await _orderServiceTest.AddOrderAsync(orderRequest);
+            var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "admin";
+            var res = await _orderServiceTest.AddOrderAsync(orderRequest,username);
+            return OK(res);
         }
     }
 }
