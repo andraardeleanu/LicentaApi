@@ -10,7 +10,7 @@ using System.Security.Claims;
 namespace Api2.Controllers
 {
     public class ProductController : ControllerBase
-    {
+    { //test
         private readonly IGenericService<Product> _productService;
 
         public ProductController(IGenericService<Product> productService)
