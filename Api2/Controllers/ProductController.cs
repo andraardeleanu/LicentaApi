@@ -42,7 +42,7 @@ namespace Api2.Controllers
         }
 
         [HttpPut]
-        [Authorize]
+        //[Authorize]
         [Route("updateProduct")]
         public async Task<IActionResult> UpdateProductAsync([FromBody] ProductDTO productRequest)
         {
@@ -54,7 +54,7 @@ namespace Api2.Controllers
 
             await _productService.UpdateAsync(product);
 
-            var entityResult = await _productService.GetByIdAsync(productRequest.Id, x => x.Name, x => x.Price);
+            var entityResult = await _productService.GetByIdAsync(productRequest.Id);
             return new JsonResult(entityResult);
         }
 
