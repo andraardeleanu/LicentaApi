@@ -1,10 +1,9 @@
 ﻿using Api2.ApiModels;
 using Api2.Mapping;
+using Api2.Requests;
 using Core.Entities;
 using Core.Services.Interfaces;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
+
 
 namespace Api2.Controllers
 {
@@ -40,6 +39,17 @@ namespace Api2.Controllers
             var orderDetail = OrderMapper.ToOrderDetailsDTO(order, orderProducts.Select(x => x.Product).ToList());
 
             return Ok(JsonConvert.SerializeObject(orderDetail));
+        }
+
+        [HttpPost]
+        [Authorize]
+        [Route("addOrder")]
+        public async Task<IActionResult> CreateOrderAsync([FromBody] OrderRequest orderRequest)
+        {
+            var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "admin";
+            var orderEntity = OrderMapper.ToOrderEntityCreate(orderRequest,username);
+            var order = await _orderService.AddAsync(orderEntity);
+            return new JsonResult(order);
         }
     }
 }

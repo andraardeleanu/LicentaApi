@@ -8,11 +8,10 @@ namespace Core.Common
 {
     public class Enums
     {
-        public enum FileType
+        public enum OrderType // you should rename this field also in DB
         {
-            CSV = 1,
-            XLS = 2,
-            XLSX = 3         
+            File = 1,
+            Manual = 2
         }
     }
 }

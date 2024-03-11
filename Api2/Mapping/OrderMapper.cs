@@ -1,18 +1,22 @@
 ﻿using Api2.ApiModels;
 using Api2.Requests;
 using Core.Entities;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Api2.Mapping
 {
     public static class OrderMapper
     {
-        public static Order ToOrderEntity(string user)
+        public static Order ToOrderEntityCreate(this OrderRequest request,string user)
         {
             return new Order()
             {
                 Date = DateTime.Now,
                 Author = user,
+                CreatedBy=request.CreatedBy,//delete it
+                OrderNo = Guid.NewGuid().ToString(),
+                Status="initiata",
+                FileType=request.FileType ,
+                WorkPoint=request.WorkPointId
             };
         }
 
