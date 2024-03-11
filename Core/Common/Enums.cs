@@ -13,5 +13,12 @@ namespace Core.Common
             File = 1,
             Manual = 2
         }
+
+        public enum OrderStatus // if you want a new table in DB and change status (from Orders table) in int, you can than make them ints too 
+        {
+            Initialized = "1",
+            Sent = "2",
+            Processed = "3",
+        }
     }
 }

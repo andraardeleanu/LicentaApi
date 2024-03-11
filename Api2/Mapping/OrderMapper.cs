@@ -1,6 +1,7 @@
 ﻿using Api2.ApiModels;
 using Api2.Requests;
 using Core.Entities;
+using static Core.Common.Enums;
 
 namespace Api2.Mapping
 {
@@ -14,8 +15,8 @@ namespace Api2.Mapping
                 Author = user,
                 CreatedBy=request.CreatedBy,//delete it
                 OrderNo = Guid.NewGuid(),
-                Status="initiata",
                 FileType=request.FileType,
+                Status= OrderStatus.Initialized,
                 WorkPointId=request.WorkPointId
             };
         }
