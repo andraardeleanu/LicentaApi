@@ -13,10 +13,10 @@ namespace Api2.Mapping
                 Date = DateTime.Now,
                 Author = user,
                 CreatedBy=request.CreatedBy,//delete it
-                OrderNo = Guid.NewGuid().ToString(),
+                OrderNo = Guid.NewGuid(),
                 Status="initiata",
-                FileType=request.FileType ,
-                WorkPoint=request.WorkPointId
+                FileType=request.FileType,
+                WorkPointId=request.WorkPointId
             };
         }
 

@@ -3,6 +3,10 @@ using Api2.Mapping;
 using Api2.Requests;
 using Core.Entities;
 using Core.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using System.Security.Claims;
 
 
 namespace Api2.Controllers
