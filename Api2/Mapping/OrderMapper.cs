@@ -16,7 +16,7 @@ namespace Api2.Mapping
                 CreatedBy=request.CreatedBy,//delete it
                 OrderNo = Guid.NewGuid(),
                 FileType=request.FileType,
-                Status= OrderStatus.Initialized,
+                Status= OrderStatus.Initialized.ToString(),
                 WorkPointId=request.WorkPointId
             };
         }

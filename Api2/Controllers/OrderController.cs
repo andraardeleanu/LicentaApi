@@ -1,6 +1,7 @@
 ﻿using Api2.ApiModels;
 using Api2.Mapping;
 using Api2.Requests;
+using Api2.Services.Interfaces;
 using Core.Entities;
 using Core.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -17,7 +18,7 @@ namespace Api2.Controllers
         private readonly IGenericService<OrderProduct> _orderProductService;
         private readonly IOrderService _orderServiceTest;
 
-        public OrderController(IGenericService<Order> orderService, IGenericService<OrderProduct> orderProductService,IOrderService orderServiceTest)
+        public OrderController(IGenericService<Order> orderService, IGenericService<OrderProduct> orderProductService, IOrderService orderServiceTest)
         {
             _orderService = orderService;
             _orderProductService = orderProductService;
@@ -48,13 +49,14 @@ namespace Api2.Controllers
         }
 
         [HttpPost]
-        [Authorize]
+       // [Authorize]
         [Route("addOrder")]
         public async Task<IActionResult> CreateOrderAsync([FromBody] OrderRequest orderRequest)
         {
             var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "admin";
-            var res = await _orderServiceTest.AddOrderAsync(orderRequest,username);
-            return OK(res);
+            orderRequest.Author = username;
+            var res = await _orderServiceTest.AddOrderAsync(orderRequest);
+            return Ok(res);
         }
     }
 }

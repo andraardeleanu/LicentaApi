@@ -11,6 +11,7 @@ namespace Api2.Requests
     public class OrderRequest
     {
         public Guid OrderNo { get; set; }
+        public string? Author { get; set; }
         public int CreatedBy { get; set; } // to be deleted also from DB
         public int WorkPointId { get; set; }
         public Enums.OrderType FileType { get; set; }

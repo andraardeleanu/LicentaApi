@@ -4,6 +4,7 @@ using Core;
 using FluentValidation.AspNetCore;
 using FluentValidation;
 using Api2.Validators;
+using Api2.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
@@ -21,6 +22,7 @@ builder.Services.AddCors();
 builder.Services.AddAuth();
 builder.Services.AddSwaggerSetup();
 builder.Services.RegisterCoreDependencies();
+builder.Services.RegisterApiDependencies();
 
 builder.Services.AddValidatorsFromAssemblyContaining<CompanyValidator>();
 builder.Services.AddFluentValidationAutoValidation();
