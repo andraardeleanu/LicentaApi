@@ -33,6 +33,6 @@ namespace Api2.Mapping
                 Products = products
 
             };
-    }
+        }
     }
 }

@@ -15,11 +15,13 @@ namespace Api2.Controllers
     {
         private readonly IGenericService<Order> _orderService;
         private readonly IGenericService<OrderProduct> _orderProductService;
+        private readonly IOrderService _orderServiceTest;
 
-        public OrderController(IGenericService<Order> orderService, IGenericService<OrderProduct> orderProductService)
+        public OrderController(IGenericService<Order> orderService, IGenericService<OrderProduct> orderProductService,IOrderService orderServiceTest)
         {
             _orderService = orderService;
             _orderProductService = orderProductService;
+            _orderServiceTest = orderServiceTest;
         }
 
         [HttpGet]
@@ -50,10 +52,7 @@ namespace Api2.Controllers
         [Route("addOrder")]
         public async Task<IActionResult> CreateOrderAsync([FromBody] OrderRequest orderRequest)
         {
-            var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "admin";
-            var orderEntity = OrderMapper.ToOrderEntityCreate(orderRequest,username);
-            var order = await _orderService.AddAsync(orderEntity);
-            return new JsonResult(order);
+            var res = await _orderServiceTest.AddOrderAsync(orderRequest);
         }
     }
 }
