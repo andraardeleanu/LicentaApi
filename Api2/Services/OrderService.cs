@@ -130,6 +130,7 @@ namespace Api2.Services
                     {
                         await RevertStock(productIds, orderRequest.Products);
                         await RevertOrderProduct(orderProductIds);
+                        await _orderService.DeleteAsync(order);
                         response.StatusCode = 500;
                         response.Data = new { ErrorMessage = "let's see" };
                         return response;
