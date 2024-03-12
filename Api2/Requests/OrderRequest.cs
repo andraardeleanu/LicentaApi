@@ -15,6 +15,6 @@ namespace Api2.Requests
         public int CreatedBy { get; set; } // to be deleted also from DB
         public int WorkPointId { get; set; }
         public Enums.OrderType FileType { get; set; }
-        public IEnumerable<ProductDetails> Products { get; set; }
+        public List<ProductDetails> Products { get; set; }
     }
 }

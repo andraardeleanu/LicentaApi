@@ -15,27 +15,29 @@ namespace Api2.Services
         private readonly IGenericService<Product> _productService;
         private readonly IGenericService<Stock> _productStockService;
 
-        public OrderService(IGenericService<Order> orderService, IGenericService<OrderProduct> orderProductService, IGenericService<Product> productService)
+        public OrderService(IGenericService<Order> orderService, IGenericService<Stock> productStockService, IGenericService<OrderProduct> orderProductService, IGenericService<Product> productService)
         {
             _orderService = orderService;
+            _productStockService = productStockService;
             _orderProductService = orderProductService;
             _productService = productService;
         }
 
-        private async Task<List<int>> RevertStock (IEnumerable<int> productIds, IEnumerable<ProductDetails> products)
+        private async Task RevertStock(IEnumerable<int> productIds, IEnumerable<ProductDetails> products)
         {
-            List<int> stocksWithErrors = new List<int>();
-            foreach( var id in productIds)
+            foreach (var id in productIds)
             {
                 var productDetails = products.SingleOrDefault(p => p.ProductId == id);
                 if (productDetails != null)
                 {
-                    var stock = await _productStockService.WhereAsync(x => x.ProductId == id);
-                    stock.AvailableStock = stock.AvailableStock + productDetails.Quantity;
-                    stock.PendingStock = stock.PendingStock - productDetails.Quantity;
-                    var newStock = await _productStockService.UpdateAsync(stock);
-                    if (newStock == null)
-                        stocksWithErrors.Add(id);
+                    var stocks = await _productStockService.WhereAsync(x => x.ProductId == id);
+                    if (stocks.Count > 0)
+                    {
+                        var stock = stocks.ElementAt(0);
+                        stock.AvailableStock = stock.AvailableStock + productDetails.Quantity;
+                        stock.PendingStock = stock.PendingStock - productDetails.Quantity;
+                        await _productStockService.UpdateAsync(stock);
+                    }
                 }
             }
         }
@@ -44,49 +46,55 @@ namespace Api2.Services
         {
             foreach (var id in orderProductIds)
             {
-                    var orderProduct = await _orderProductService.GetByIdAsync(id);
+                var orderProduct = await _orderProductService.GetByIdAsync(id);
 
                 if (orderProduct != null)
-                    var deleteResult = _orderProductService.DeleteAsync(orderProduct);
+                    await _orderProductService.DeleteAsync(orderProduct);
             }
-            
         }
 
-        private async Task<Stock> CheckForStockStock(ProductDetails product)
+        private async Task<Stock?> CheckForStockStock(ProductDetails product)
         {
             var productResult = await _productService.GetByIdAsync(product.ProductId);
 
             if (productResult == null)
-                null;
-            var stock = await _productStockService.WhereAsync(x => x.ProductId == product.ProductId);
-            if (stock == null)
-                null;
+                return null;
+
+            var stocks = await _productStockService.WhereAsync(x => x.ProductId == product.ProductId);
+
+            if (stocks.Count == 0)
+                return null;
+
+            var stock = stocks.ElementAt(0);
 
             if (stock.AvailableStock < product.Quantity)
-                null;
+                return null;
 
             return stock;
         }
 
 
-        private async Task <bool> UpdateStock(ProductDetails product, Stock stock)
-        { 
-            stock.AvailableStock = stock.AvailableStock - product.Quantity;
-            tock.PendingStock = stock.PendingStock + product.Quantity;
+        private async Task<bool> UpdateStock(ProductDetails product, Stock stock)
+        {
+            try
+            {
+                stock.AvailableStock = stock.AvailableStock - product.Quantity;
+                stock.PendingStock = stock.PendingStock + product.Quantity;
 
-            var newStock = await _productStockService.UpdateAsync(stock);
-            if (newStock == null)
+                await _productStockService.UpdateAsync(stock);
+                return true;
+            }
+            catch (Exception)
+            {
                 return false;
-
-
-            return true;
+            }
         }
 
         public async Task<GenericResponse<object>> AddOrderAsync(OrderRequest orderRequest)
         {
             var response = new GenericResponse<object>();
             try
-            { 
+            {
                 var orderEntity = OrderMapper.ToOrderEntityCreate(orderRequest, orderRequest.Author);
                 var order = await _orderService.AddAsync(orderEntity);
                 if (order?.Id != null)
@@ -96,10 +104,10 @@ namespace Api2.Services
                     foreach (var product in orderRequest.Products)
                     {
                         var stock = await CheckForStockStock(product);
-                        if (stock==null)
+                        if (stock == null)
                             break;
 
-                        var updateStockResponse = await UpdateStock(product);
+                        var updateStockResponse = await UpdateStock(product, stock);
                         if (!updateStockResponse)
                             break;
 
@@ -114,29 +122,30 @@ namespace Api2.Services
                     }
                     if (orderProductIds.Count == orderRequest.Products.Count && orderRequest.Products.Count == orderProductIds.Count)
                     {
-                        response.Status = 200;
+                        response.StatusCode = 200;
                         response.Data = order;
                         return response;
                     }
                     else
                     {
-                        var stockWithErrors = await RevertStock(productIds, orderRequest.Products);
-                        var removeOrders = await RevertOrderProduct(orderProductIds);
-                        response.Status = 500;
+                        await RevertStock(productIds, orderRequest.Products);
+                        await RevertOrderProduct(orderProductIds);
+                        response.StatusCode = 500;
                         response.Data = new { ErrorMessage = "let's see" };
+                        return response;
                     }
                 }
-                response.Status = 500;
+                response.StatusCode = 500;
                 response.Data = new { ErrorMessage = "Unable to insert order" };
-                
+                return response;
             }
             catch (Exception ex)
             {
-                response.Status = 500;
+                response.StatusCode = 500;
                 response.Data = new { ErrorMessage = ex };
+                return response;
             }
         }
-
     }
 }
 
