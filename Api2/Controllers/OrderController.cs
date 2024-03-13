@@ -37,7 +37,7 @@ namespace Api2.Controllers
         }
 
         [HttpGet]
-        [Route("getOrderDetails")]
+        [Route("getOrderDetails/{orderId}")]
         public async Task<IActionResult> GetOrderDetailsAsync(int orderId)
         {
             var order = await _orderService.GetByIdAsync(orderId, x => x.OrderProduct);
@@ -45,7 +45,7 @@ namespace Api2.Controllers
 
             var orderDetail = OrderMapper.ToOrderDetailsDTO(order, orderProducts.Select(x => x.Product).ToList());
 
-            return Ok(JsonConvert.SerializeObject(orderDetail));
+            return new JsonResult(orderDetail.Products.ToList());
         }
 
         [HttpPost]
@@ -56,7 +56,7 @@ namespace Api2.Controllers
             var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "admin";
             orderRequest.Author = username;
             var res = await _orderServiceTest.AddOrderAsync(orderRequest);
-            return Ok(res);
+            return new JsonResult(res);
         }
     }
 }

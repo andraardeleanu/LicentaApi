@@ -74,8 +74,8 @@ namespace Api2.Controllers
 
         [HttpGet]
         [Authorize]
-        [Route("getWorkpointsFromCompany")]
-        public async Task<IActionResult> GetWorkpointsFromCompany(int companyId)
+        [Route("getWorkpointsFromCompany/{companyId}")]
+        public async Task<IActionResult> GetWorkpointsFromCompany([FromRoute] int companyId)
         {
             var companyWorkpoints = await _workpointService.WhereAsync(x => x.CompanyId == companyId);
             return Ok(companyWorkpoints);

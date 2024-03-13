@@ -123,7 +123,7 @@ namespace Api2.Services
                     if (orderProductIds.Count == orderRequest.Products.Count && orderRequest.Products.Count == orderProductIds.Count)
                     {
                         response.StatusCode = 200;
-                        response.Data = order;
+                        response.Data = new { OrderId = order.Id };
                         return response;
                     }
                     else
