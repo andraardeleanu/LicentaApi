@@ -9,6 +9,6 @@ namespace Api2.ApiModels
         public DateTime Date { get; set; }
         public int WorkPointId { get; set; }
         public string Status { get; set; }
-        public IEnumerable<Product> Products;
+        public IEnumerable<ProductWithQuantity> Products;
     }
 }

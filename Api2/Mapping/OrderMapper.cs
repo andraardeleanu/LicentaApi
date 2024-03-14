@@ -21,7 +21,7 @@ namespace Api2.Mapping
             };
         }
 
-        public static OrderDetailsDTO ToOrderDetailsDTO(Order order, List<Product> products)
+        public static OrderDetailsDTO ToOrderDetailsDTO(Order order, List<ProductWithQuantity> products)
         {
             return new OrderDetailsDTO()
             {

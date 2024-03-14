@@ -41,9 +41,15 @@ namespace Api2.Controllers
         public async Task<IActionResult> GetOrderDetailsAsync(int orderId)
         {
             var order = await _orderService.GetByIdAsync(orderId, x => x.OrderProduct);
-            var orderProducts = await _orderProductService.WhereAsync(x => x.OrderId == orderId, y=> new { y.Product, y.Quantity });
+            var orderProducts = await _orderProductService.WhereAsync(x => x.OrderId == orderId, y=> y.Product);
 
-            var orderDetail = OrderMapper.ToOrderDetailsDTO(order, orderProducts.Select(x => x.Product).ToList());
+            var productsWithQuantity = orderProducts.Select(op => new
+            {
+                Product = op.Product,
+                Quantity = op.Quantity
+            }).ToList();
+
+            var orderDetail = OrderMapper.ToOrderDetailsDTO(order, productsWithQuantity);
 
             return new JsonResult(orderDetail.Products.ToList());
         }
