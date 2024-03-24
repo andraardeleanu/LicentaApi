@@ -43,9 +43,10 @@ namespace Api2.Controllers
             var order = await _orderService.GetByIdAsync(orderId, x => x.OrderProduct);
             var orderProducts = await _orderProductService.WhereAsync(x => x.OrderId == orderId, y=> y.Product);
 
-            var productsWithQuantity = orderProducts.Select(op => new
+            var productsWithQuantity = orderProducts.Select(op => new ProductWithQuantity
             {
-                Product = op.Product,
+                Name = op.Product.Name,
+                Price = op.Product.Price,
                 Quantity = op.Quantity
             }).ToList();
 

@@ -1,8 +1,11 @@
 using Api2.ApiModels;
+using Core.Entities;
+using Core.Services.Interfaces;
 using Infra.Data.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -154,6 +157,18 @@ namespace Api2.Controllers
         {
             var companyUsers = _userManager.Users.Where(u => u.CompanyId == companyId);
             return Ok(companyUsers);
+        }
+
+        [HttpGet]
+        //[Authorize]
+        [Route("getUsers")]
+        public async Task<IActionResult> GetUsersAsync()
+        {
+            var users = await _userManager.Users.ToListAsync();
+            var userRoles = await _userManager.GetRolesAsync(users.FirstOrDefault());
+            var dtoList = users.Select(x => new UserDTO(x.Id, x.FirstName, x.LastName, x.CompanyId, x.UserName, userRoles));
+
+            return new JsonResult(dtoList);
         }
     }
 }

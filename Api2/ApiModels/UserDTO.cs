@@ -8,6 +8,7 @@ namespace Api2.ApiModels
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public int CompanyId { get; set; }
+
         public string Username { get; set; }
         public IList<string> Roles { get; set; }
         public UserDTO(string id, string firstName, string lastName, int companyId, string username, IList<string> role)
