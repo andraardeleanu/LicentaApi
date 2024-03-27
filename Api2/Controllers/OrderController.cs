@@ -127,13 +127,13 @@ namespace Api2.Controllers
                         var order = new OrderRequest
                         {
                             OrderNo = Guid.NewGuid(),
-                            orderRequest.Author = username,
+                            Author = username,
                             CreatedBy = 0, // Remove it, until then put a valid id
                             WorkPointId = workPointId,
                             Products = products
                         };
 
-                        await _orderService.AddOrderAsync(order, Enums.OrderType.File);
+                        await _orderServiceTest.AddOrderAsync(order, Enums.OrderType.File);
 
                         return Ok("Order added successfully from CSV.");
                     }
