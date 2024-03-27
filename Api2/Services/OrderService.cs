@@ -5,6 +5,7 @@ using Api2.Mapping;
 using Api2.Services.Interfaces;
 using Api2.ApiModels;
 using System.Linq;
+using Core.Common;
 
 namespace Api2.Services
 {
@@ -90,11 +91,12 @@ namespace Api2.Services
             }
         }
 
-        public async Task<GenericResponse<object>> AddOrderAsync(OrderRequest orderRequest)
+        public async Task<GenericResponse<object>> AddOrderAsync(OrderRequest orderRequest, Enums.OrderType orderType)
         {
             var response = new GenericResponse<object>();
             try
             {
+                orderRequest.FileType = orderType;
                 var orderEntity = OrderMapper.ToOrderEntityCreate(orderRequest, orderRequest.Author);
                 var order = await _orderService.AddAsync(orderEntity);
                 if (order?.Id != null)
