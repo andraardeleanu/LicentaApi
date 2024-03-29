@@ -3,7 +3,9 @@ using Api2.Mapping;
 using Api2.Requests;
 using Core.Entities;
 using Core.Services.Interfaces;
+using Infra.Data.Auth;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -12,10 +14,12 @@ namespace Api2.Controllers
     public class CompanyController : ControllerBase
     {
         private readonly IGenericService<Company> _companyService;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public CompanyController(IGenericService<Company> companyService)
+        public CompanyController(IGenericService<Company> companyService, UserManager<ApplicationUser> userManager)
         {
             _companyService = companyService;
+            _userManager = userManager;
         }
 
         [HttpGet]
@@ -39,13 +43,28 @@ namespace Api2.Controllers
             return new JsonResult(company);
         }
 
+        [HttpGet]
+        //[Authorize]
+        [Route("getCompanyByName/{name}")]
+        public async Task<IActionResult> GetCompanyByNameAsync(string name)
+        {
+            var company = await _companyService.WhereAsync(x => x.Name.Contains(name));
+
+            return new JsonResult(company);
+        }
+
         [HttpPost]
         [Authorize]
         [Route("addCompany")]
         public async Task<IActionResult> AddCompanyAsync([FromBody] CompanyRequest companyRequest)
         {
-            var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "admin";
-            var companyEntity = companyRequest.ToCompanyEntity(username);
+            var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var user = await _userManager.FindByNameAsync(username);
+
+            var existingCompany = await _companyService.WhereAsync(x => x.Cui == companyRequest.Cui);
+            if (existingCompany != null && existingCompany.Any()) return BadRequest("Exista deja o companie cu acest CUI.");
+
+            var companyEntity = companyRequest.ToCompanyEntity(user.Id, username);
             var company = await _companyService.AddAsync(companyEntity);
 
             return new JsonResult(company);

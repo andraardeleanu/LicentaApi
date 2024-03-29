@@ -6,15 +6,8 @@ using Core.Entities;
 using Core.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using System.Security.Claims;
-using OfficeOpenXml;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading.Tasks;
 using Core.Common;
-using Microsoft.AspNetCore.Http;
-
 
 namespace Api2.Controllers
 {
@@ -40,6 +33,36 @@ namespace Api2.Controllers
             var dtoList = orders.Select(x => new OrderDTO(x.Id, x.OrderNo, x.Date, x.WorkPointId, x.Status));
 
             return new JsonResult(dtoList);
+        }
+
+        [HttpGet]
+        [Authorize]
+        [Route("getOrdersByUserId/{id}")]
+        public async Task<IActionResult> GetOrdersFromUser([FromRoute] int id)
+        {
+            var userOrders = await _orderService.WhereAsync(x => x.CreatedBy == id);
+            
+            return Ok(userOrders);
+        }
+
+        [HttpGet]
+        //[Authorize]
+        [Route("getOrdersByStatus/{status}")]
+        public async Task<IActionResult> GetCompanyByNameAsync(string status)
+        {
+            var orders = await _orderService.WhereAsync(x => x.Status == status);
+
+            return new JsonResult(orders);
+        }
+
+        [HttpGet]
+        //[Authorize]
+        [Route("getOrdersByWorkpoint/{workpointId}")]
+        public async Task<IActionResult> GetCompanyByWorkpoint(int workpointId)
+        {
+            var workpointOrders = await _orderService.WhereAsync(x => x.WorkPointId == workpointId);
+            
+            return Ok(workpointOrders);
         }
 
         [HttpGet]

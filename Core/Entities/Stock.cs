@@ -11,6 +11,5 @@ namespace Core.Entities
         public int AvailableStock {  get; set; }
         public int PendingStock { get; set; }
         public int ProductId { get; set; }
-        public virtual Product Product { get; set; }
     }
 }

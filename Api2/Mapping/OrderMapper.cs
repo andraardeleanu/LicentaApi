@@ -15,7 +15,6 @@ namespace Api2.Mapping
                 Author = user,
                 CreatedBy=request.CreatedBy,//delete it
                 OrderNo = Guid.NewGuid(),
-                FileType=request.FileType,
                 Status= OrderStatus.Initialized.ToString(),
                 WorkPointId=request.WorkPointId
             };
@@ -31,7 +30,6 @@ namespace Api2.Mapping
                 WorkPointId = order.WorkPointId,
                 Status = order.Status,
                 Products = products
-
             };
         }
     }

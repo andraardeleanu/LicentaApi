@@ -17,23 +17,41 @@ namespace Api2.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly IGenericService<Company> _companyService;
 
-        public AuthenticationController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
+        public AuthenticationController(UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager, IGenericService<Company> companyService)
         {
             _userManager = userManager;
             _roleManager = roleManager;
+            _companyService = companyService;
         }
 
         [HttpGet]
-        [Authorize]
+        //[Authorize]
         [Route("getUser")]
         public async Task<IActionResult> GetUserDataAsync()
         {
             var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var user = await _userManager.FindByNameAsync(username);
             var userRoles = await _userManager.GetRolesAsync(user);
+            var userCompanies = await _companyService.WhereAsync(c => c.CreatedBy == user.Id);
 
-            return new JsonResult(new UserDTO(user.Id, user.FirstName, user.LastName, user.CompanyId, user.UserName, userRoles));
+            return new JsonResult(new UserDTO(user.Id, user.FirstName, user.LastName, userCompanies, user.UserName, userRoles));
+        }
+
+        [HttpGet]
+        //[Authorize]
+        [Route("getUserByUsername/{username}")]
+        public async Task<IActionResult> GetUserByUsernameAsync(string username)
+        {
+            var user = await _userManager.FindByNameAsync(username);
+
+            if (user == null) return NotFound("Nu exista niciun utilizator cu acest username. Incearca un username existent.");
+
+            var userRoles = await _userManager.GetRolesAsync(user);
+            var userCompanies = await _companyService.WhereAsync(c => c.CreatedBy == user.Id);
+
+            return new JsonResult(new UserDTO(user.Id, user.FirstName, user.LastName, userCompanies, user.UserName, userRoles));
         }
 
         [HttpPost]
@@ -151,8 +169,8 @@ namespace Api2.Controllers
         }
 
         [HttpGet]
-        [Authorize]
-        [Route("getUsersFromCompany")]
+        //[Authorize]
+        [Route("getUsersFromCompany/{companyId}")]
         public IActionResult GetUsersFromCompanyAsync(int companyId)
         {
             var companyUsers = _userManager.Users.Where(u => u.CompanyId == companyId);
@@ -165,10 +183,22 @@ namespace Api2.Controllers
         public async Task<IActionResult> GetUsersAsync()
         {
             var users = await _userManager.Users.ToListAsync();
-            var userRoles = await _userManager.GetRolesAsync(users.FirstOrDefault());
-            var dtoList = users.Select(x => new UserDTO(x.Id, x.FirstName, x.LastName, x.CompanyId, x.UserName, userRoles));
+            var companies = await _companyService.ListAsync();
 
-            return new JsonResult(dtoList);
+            var resList = new List<UserDTO>();
+
+            foreach (var user in users)
+            {
+                var userRoles = await _userManager.GetRolesAsync(user);
+
+                var userCompanies = await _companyService.WhereAsync(c => c.CreatedBy == user.Id);
+
+                var userEntity = new UserDTO(user.Id, user.FirstName, user.LastName, userCompanies, user.UserName, userRoles);
+
+                resList.Add(userEntity);
+            }
+
+            return new JsonResult(resList);
         }
     }
 }

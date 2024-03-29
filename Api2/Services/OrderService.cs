@@ -96,7 +96,6 @@ namespace Api2.Services
             var response = new GenericResponse<object>();
             try
             {
-                orderRequest.FileType = orderType;
                 var orderEntity = OrderMapper.ToOrderEntityCreate(orderRequest, orderRequest.Author);
                 var order = await _orderService.AddAsync(orderEntity);
                 if (order?.Id != null)

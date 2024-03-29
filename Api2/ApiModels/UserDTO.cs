@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using Core.Entities;
+using System.Data;
 
 namespace Api2.ApiModels
 {
@@ -7,16 +8,15 @@ namespace Api2.ApiModels
         public string Id { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
-        public int CompanyId { get; set; }
-
+        public IList<Company> Companies { get; set; }
         public string Username { get; set; }
         public IList<string> Roles { get; set; }
-        public UserDTO(string id, string firstName, string lastName, int companyId, string username, IList<string> role)
+        public UserDTO(string id, string firstName, string lastName, IList<Company> companies, string username, IList<string> role)
         {
             Id = id;
             FirstName = firstName;
             LastName = lastName;
-            CompanyId = companyId;
+            Companies = companies;
             Username = username;
             Roles = role;
         }

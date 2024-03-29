@@ -37,6 +37,9 @@ namespace Api2.Controllers
         [Route("addWorkpoint")]
         public async Task<IActionResult> AddWorkpointAsync([FromBody] WorkpointRequest workpointRequest)
         {
+            var existingWorkpoint = await _workpointService.WhereAsync(x => x.Name == workpointRequest.Name);
+            if (existingWorkpoint != null && existingWorkpoint.Any()) return BadRequest("Exista deja o un punct de lucru cu acest nume.");
+
             var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "admin";
             var workpointEntity = workpointRequest.ToWorkpointEntity(username);
             var workpoint = await _workpointService.AddAsync(workpointEntity);
@@ -79,6 +82,16 @@ namespace Api2.Controllers
         {
             var companyWorkpoints = await _workpointService.WhereAsync(x => x.CompanyId == companyId);
             return Ok(companyWorkpoints);
+        }
+
+        [HttpGet]
+        //[Authorize]
+        [Route("getWorkpointByName/{name}")]
+        public async Task<IActionResult> GetWorkpointByNameAsync(string name)
+        {
+            var workpoint = await _workpointService.WhereAsync(x => x.Name.Contains(name));
+
+            return new JsonResult(workpoint);
         }
     }
 }

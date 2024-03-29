@@ -8,6 +8,5 @@ namespace Infra.Data.Auth
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public int CompanyId { get; set; }
-        public virtual Company Company { get; set; }
     }
 }
