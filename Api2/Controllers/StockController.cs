@@ -1,4 +1,5 @@
-﻿using Core.Entities;
+﻿using Api2.ApiModels;
+using Core.Entities;
 using Core.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,7 +16,7 @@ namespace Api2.Controllers
             _productService = productService;
         }
 
-        /*
+
         [HttpGet]
         //[Authorize]
         [Route("getStocks")]
@@ -26,18 +27,16 @@ namespace Api2.Controllers
 
             foreach (var stock in stocks)
             {
-                var stockProduct = await _productService.WhereAsync(c => c.Id == stock.ProductId);
+                var stockProducts = await _productService.WhereAsync(p => p.Id == stock.ProductId);
 
-                foreach (var product in stockProduct)
+                foreach (var sp in stockProducts)
                 {
-                    var stockEntity = new StockDTO(Id, ProductId, stockProduct.Name, AvailableStock, PendingStock);
-                }               
-
+                    var stockEntity = new StockDTO(stock.Id, stock.ProductId, sp.Name, stock.AvailableStock, stock.PendingStock);
+                    resList.Add(stockEntity);
+                }                              
             }
-               
-
-                return new JsonResult(dtoList);
-            }
-        }*/
+            return new JsonResult(resList);
+        }
     }
+
 }
