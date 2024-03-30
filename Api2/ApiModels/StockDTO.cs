@@ -2,14 +2,16 @@
 {
     public class StockDTO
     {
-        public string Id { get; set; }
-        public string ProductId { get; set; }
-        public string AvailableStock { get; set; }
-        public string PendingStock { get; set; }
-        public StockDTO(string id, string productId, string availableStock, string pendingStock)
+        public int Id { get; set; }
+        public int ProductId { get; set; }
+        public string ProductName { get; set; }
+        public int AvailableStock { get; set; }
+        public int PendingStock { get; set; }
+        public StockDTO(int id, int productId, string productName, int availableStock, int pendingStock)
         {
             Id = id;
             ProductId = productId;
+            ProductName = productName;
             AvailableStock = availableStock;
             PendingStock = pendingStock;
         }

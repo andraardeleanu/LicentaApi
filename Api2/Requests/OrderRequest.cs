@@ -2,7 +2,7 @@
 
 namespace Api2.Requests
 {
-    public class ProductDetails //move it from here if you want
+    public class ProductDetails
     {
         public int ProductId { get; set; }
         public int Quantity{ get; set; }
@@ -12,7 +12,7 @@ namespace Api2.Requests
     {
         public Guid OrderNo { get; set; }
         public string? Author { get; set; }
-        public int CreatedBy { get; set; } // to be deleted also from DB
+        public string CreatedBy { get; set; }
         public int WorkPointId { get; set; }
         public List<ProductDetails> Products { get; set; }
     }

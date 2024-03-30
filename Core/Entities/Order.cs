@@ -6,7 +6,7 @@ namespace Core.Entities
     {
         public Guid OrderNo { get; set; }
         public DateTime Date { get; set; }
-        public int CreatedBy { get; set; }
+        public string CreatedBy { get; set; }
         public string Status { get; set; }        
         public Enums.OrderType FileType { get; set; } // change this prop to order type in db and models
         public int WorkPointId { get; set; }

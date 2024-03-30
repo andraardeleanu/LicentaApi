@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Core.Common;
+using Microsoft.AspNetCore.Identity;
+using Infra.Data.Auth;
 
 namespace Api2.Controllers
 {
@@ -16,12 +18,14 @@ namespace Api2.Controllers
         private readonly IGenericService<Order> _orderService;
         private readonly IGenericService<OrderProduct> _orderProductService;
         private readonly IOrderService _orderServiceTest;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public OrderController(IGenericService<Order> orderService, IGenericService<OrderProduct> orderProductService, IOrderService orderServiceTest)
+        public OrderController(IGenericService<Order> orderService, IGenericService<OrderProduct> orderProductService, IOrderService orderServiceTest, UserManager<ApplicationUser> userManager)
         {
             _orderService = orderService;
             _orderProductService = orderProductService;
             _orderServiceTest = orderServiceTest;
+            _userManager = userManager;
         }
 
         [HttpGet]
@@ -38,7 +42,7 @@ namespace Api2.Controllers
         [HttpGet]
         [Authorize]
         [Route("getOrdersByUserId/{id}")]
-        public async Task<IActionResult> GetOrdersFromUser([FromRoute] int id)
+        public async Task<IActionResult> GetOrdersFromUser([FromRoute] string id)
         {
             var userOrders = await _orderService.WhereAsync(x => x.CreatedBy == id);
             
@@ -99,8 +103,11 @@ namespace Api2.Controllers
                 encounteredProductIds.Add(product.ProductId);
             }
 
-            var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "admin";
+            var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var user = await _userManager.FindByNameAsync(username);
+
             orderRequest.Author = username;
+            orderRequest.CreatedBy = user.Id;
             var res = await _orderServiceTest.AddOrderAsync(orderRequest, Enums.OrderType.Manual);
             return new JsonResult(res);
         }
@@ -114,6 +121,7 @@ namespace Api2.Controllers
                 return BadRequest("Invalid file.");
             }
             var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "admin";
+            var user = await _userManager.FindByNameAsync(username);
 
             try
             {
@@ -151,7 +159,7 @@ namespace Api2.Controllers
                         {
                             OrderNo = Guid.NewGuid(),
                             Author = username,
-                            CreatedBy = 0, // Remove it, until then put a valid id
+                            CreatedBy = user.Id,
                             WorkPointId = workPointId,
                             Products = products
                         };

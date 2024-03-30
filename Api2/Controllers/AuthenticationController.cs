@@ -138,6 +138,11 @@ namespace Api2.Controllers
         {
             var existingUser = await _userManager.FindByNameAsync(model.Username);
             if (existingUser != null) return Unauthorized("Username already exists! Try to choose another one.");
+
+            var existingCompany = await _companyService.GetByIdAsync(model.CompanyId);
+            if (model.CompanyId == null) return Unauthorized("Trebuie sa asignezi noul user unei Companii. Daca aceasta nu exista poti sa o creezi din tab-ul Companii.");
+            if (existingCompany == null) return Unauthorized("Compania aleasa nu exista. Alege una dintre companiile existente.");
+
             var appUser = new ApplicationUser
             {
                 Email = model.Email,

@@ -3,9 +3,11 @@ using Api2.Mapping;
 using Api2.Requests;
 using Core.Entities;
 using Core.Services.Interfaces;
+using Infra.Data.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.Design;
 using System.Security.Claims;
 
 namespace Api2.Controllers
@@ -14,11 +16,13 @@ namespace Api2.Controllers
     {
         private readonly IGenericService<WorkPoint> _workpointService;
         private readonly IGenericService<Company> _companyService;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public WorkPointController(IGenericService<WorkPoint> workpointService, IGenericService<Company> companyService)
+        public WorkPointController(IGenericService<WorkPoint> workpointService, IGenericService<Company> companyService, UserManager<ApplicationUser> userManager)
         {
             _workpointService = workpointService;
             _companyService = companyService;
+            _userManager = userManager;
         }
 
         [HttpGet]
@@ -32,6 +36,15 @@ namespace Api2.Controllers
             return new JsonResult(dtoList);
         }
 
+        [HttpGet]
+        [Authorize]
+        [Route("getWorkpointsByUserId/{userId}")]
+        public async Task<IActionResult> GetWorkpointsByUserIdAsync(string userId)
+        {
+            var userWorkpoints = await _workpointService.WhereAsync(x => x.CreatedBy == userId);
+            return Ok(userWorkpoints);
+        }
+
         [HttpPost]
         [Authorize]
         [Route("addWorkpoint")]
@@ -40,8 +53,10 @@ namespace Api2.Controllers
             var existingWorkpoint = await _workpointService.WhereAsync(x => x.Name == workpointRequest.Name);
             if (existingWorkpoint != null && existingWorkpoint.Any()) return BadRequest("Exista deja o un punct de lucru cu acest nume.");
 
-            var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "admin";
-            var workpointEntity = workpointRequest.ToWorkpointEntity(username);
+            var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var user = await _userManager.FindByNameAsync(username);
+
+            var workpointEntity = workpointRequest.ToWorkpointEntity(user.Id, username);
             var workpoint = await _workpointService.AddAsync(workpointEntity);
 
             return new JsonResult(workpoint);
