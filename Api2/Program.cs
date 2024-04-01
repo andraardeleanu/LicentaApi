@@ -5,6 +5,7 @@ using FluentValidation.AspNetCore;
 using FluentValidation;
 using Api2.Validators;
 using Api2.Services;
+using Core.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
@@ -37,6 +38,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseMiddleware<ExceptionMiddleware>();
 app.UseRouting();
 
 app.UseCors(options =>

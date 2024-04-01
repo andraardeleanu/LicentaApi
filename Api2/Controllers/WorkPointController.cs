@@ -1,6 +1,7 @@
 ﻿using Api2.ApiModels;
 using Api2.Mapping;
 using Api2.Requests;
+using Core.Constants;
 using Core.Entities;
 using Core.Services.Interfaces;
 using Infra.Data.Auth;
@@ -55,8 +56,8 @@ namespace Api2.Controllers
         [Route("addWorkpoint")]
         public async Task<IActionResult> AddWorkpointAsync([FromBody] WorkpointRequest workpointRequest)
         {
-            var existingWorkpoint = await _workpointService.WhereAsync(x => x.Name == workpointRequest.Name);
-            if (existingWorkpoint != null && existingWorkpoint.Any()) return BadRequest("Exista deja o un punct de lucru cu acest nume.");
+            var existingWorkpoint = await _workpointService.WhereAsync(x => x.Name == workpointRequest.Name && x.Address == workpointRequest.Address);
+            if (existingWorkpoint != null && existingWorkpoint.Any()) return BadRequest(ErrorMessages.ExistingWorkpoint);
 
             var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var user = await _userManager.FindByNameAsync(username);

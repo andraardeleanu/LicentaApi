@@ -10,6 +10,7 @@ using System.Security.Claims;
 using Core.Common;
 using Microsoft.AspNetCore.Identity;
 using Infra.Data.Auth;
+using Core.Constants;
 
 namespace Api2.Controllers
 {
@@ -35,8 +36,8 @@ namespace Api2.Controllers
         {
             var orders = await _orderService.ListAsync();
 
-            if(orderRequest.WorkPointId != null)
-            {           
+            if (orderRequest.WorkPointId != null)
+            {
                 orders = orders.FindAll(x => x.WorkPointId == orderRequest.WorkPointId);
             }
 
@@ -56,7 +57,7 @@ namespace Api2.Controllers
         public async Task<IActionResult> GetOrdersFromUser([FromRoute] string id)
         {
             var userOrders = await _orderService.WhereAsync(x => x.CreatedBy == id);
-            
+
             return Ok(userOrders);
         }
 
@@ -65,7 +66,7 @@ namespace Api2.Controllers
         public async Task<IActionResult> GetOrderDetailsAsync(int orderId)
         {
             var order = await _orderService.GetByIdAsync(orderId, x => x.OrderProduct);
-            var orderProducts = await _orderProductService.WhereAsync(x => x.OrderId == orderId, y=> y.Product);
+            var orderProducts = await _orderProductService.WhereAsync(x => x.OrderId == orderId, y => y.Product);
 
             var productsWithQuantity = orderProducts.Select(op => new ProductWithQuantity
             {
@@ -80,7 +81,7 @@ namespace Api2.Controllers
         }
 
         [HttpPost]
-       // [Authorize]
+        // [Authorize]
         [Route("addOrder")]
         public async Task<IActionResult> CreateOrderAsync([FromBody] OrderRequest orderRequest)
         {
@@ -89,7 +90,7 @@ namespace Api2.Controllers
             {
                 if (encounteredProductIds.Contains(product.ProductId))
                 {
-                    return BadRequest($"Duplicate product ID encountered: {product.ProductId}. Product IDs must be unique.");
+                    return BadRequest(ErrorMessages.DuplicatedProduct + product.ProductId);
                 }
                 encounteredProductIds.Add(product.ProductId);
             }

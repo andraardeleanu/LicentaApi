@@ -1,6 +1,7 @@
 ﻿using Api2.ApiModels;
 using Api2.Mapping;
 using Api2.Requests;
+using Core.Constants;
 using Core.Entities;
 using Core.Services.Interfaces;
 using Infra.Data.Auth;
@@ -29,7 +30,7 @@ namespace Api2.Controllers
         {
             var companies = await _companyService.ListAsync();
 
-            if(companyFilterRequest.Name != null)
+            if (companyFilterRequest.Name != null)
             {
                 companies = companies.FindAll(x => x.Name.Contains(companyFilterRequest.Name));
             }
@@ -59,7 +60,7 @@ namespace Api2.Controllers
         }
 
         [HttpPost]
-        [Authorize]
+        //[Authorize]
         [Route("addCompany")]
         public async Task<IActionResult> AddCompanyAsync([FromBody] CompanyRequest companyRequest)
         {
@@ -67,12 +68,13 @@ namespace Api2.Controllers
             var user = await _userManager.FindByNameAsync(username);
 
             var existingCompany = await _companyService.WhereAsync(x => x.Cui == companyRequest.Cui);
-            if (existingCompany != null && existingCompany.Any()) return BadRequest("Exista deja o companie cu acest CUI.");
+            if (existingCompany != null && existingCompany.Any()) return BadRequest(ErrorMessages.ExistingCui);
 
             var companyEntity = companyRequest.ToCompanyEntity(user.Id, username);
             var company = await _companyService.AddAsync(companyEntity);
 
             return new JsonResult(company);
+
         }
 
         [HttpPut]
