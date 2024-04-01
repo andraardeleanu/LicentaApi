@@ -28,9 +28,14 @@ namespace Api2.Controllers
         [HttpGet]
         [Authorize]
         [Route("getWorkpoints")]
-        public async Task<IActionResult> GetWorkpointAsync()
+        public async Task<IActionResult> GetWorkpointAsync([FromQuery] NameFilterRequest workpointFilterRequest)
         {
             var workpoints = await _workpointService.ListAsync();
+
+            if(workpointFilterRequest.Name != null)
+            {
+                workpoints = workpoints.FindAll(x => x.Name.Contains(workpointFilterRequest.Name));
+            }
             var dtoList = workpoints.Select(x => new WorkPointDTO(x.Id, x.Name, x.Address, x.Author, x.CompanyId));
 
             return new JsonResult(dtoList);
@@ -97,16 +102,6 @@ namespace Api2.Controllers
         {
             var companyWorkpoints = await _workpointService.WhereAsync(x => x.CompanyId == companyId);
             return Ok(companyWorkpoints);
-        }
-
-        [HttpGet]
-        //[Authorize]
-        [Route("getWorkpointByName/{name}")]
-        public async Task<IActionResult> GetWorkpointByNameAsync(string name)
-        {
-            var workpoint = await _workpointService.WhereAsync(x => x.Name.Contains(name));
-
-            return new JsonResult(workpoint);
         }
     }
 }

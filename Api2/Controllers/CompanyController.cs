@@ -23,11 +23,16 @@ namespace Api2.Controllers
         }
 
         [HttpGet]
-        [Authorize]
+        //[Authorize]
         [Route("getCompanies")]
-        public async Task<IActionResult> GetCompaniesAsync()
+        public async Task<IActionResult> GetCompaniesAsync([FromQuery] NameFilterRequest companyFilterRequest)
         {
             var companies = await _companyService.ListAsync();
+
+            if(companyFilterRequest.Name != null)
+            {
+                companies = companies.FindAll(x => x.Name.Contains(companyFilterRequest.Name));
+            }
             var dtoList = companies.Select(x => new CompanyDTO(x.Id, x.Name, x.Cui, x.Author, x.DateCreated, x.DateUpdated));
 
             return new JsonResult(dtoList);

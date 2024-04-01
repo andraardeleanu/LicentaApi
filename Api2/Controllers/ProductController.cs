@@ -21,11 +21,17 @@ namespace Api2.Controllers
         }
 
         [HttpGet]
-        [Authorize]
+        //[Authorize]
         [Route("getProducts")]
-        public async Task<IActionResult> GetProductAsync()
+        public async Task<IActionResult> GetProductAsync([FromQuery] NameFilterRequest productFilterRequest)
         {
             var products = await _productService.ListAsync();
+
+            if (productFilterRequest.Name != null)
+            {
+                products = products.FindAll(x => x.Name.Contains(productFilterRequest.Name));
+            }
+
             var dtoList = products.Select(x => new ProductDTO(x.Id, x.Name, x.Price, x.Author));
 
             return new JsonResult(dtoList);
@@ -84,16 +90,6 @@ namespace Api2.Controllers
             await _productService.DeleteAsync(product);
 
             return Ok();
-        }
-
-        [HttpGet]
-        //[Authorize]
-        [Route("getProductsByName/{name}")]
-        public async Task<IActionResult> GetProductsByNameAsync(string name)
-        {
-            var product = await _productService.WhereAsync(x => x.Name.Contains(name));
-
-            return new JsonResult(product);
         }
     }
 }

@@ -29,11 +29,22 @@ namespace Api2.Controllers
         }
 
         [HttpGet]
-        [Authorize]
+        //[Authorize]
         [Route("getOrders")]
-        public async Task<IActionResult> GetOrderAsync()
+        public async Task<IActionResult> GetOrderAsync([FromQuery] OrderFilterRequest orderRequest)
         {
             var orders = await _orderService.ListAsync();
+
+            if(orderRequest.WorkPointId != null)
+            {           
+                orders = orders.FindAll(x => x.WorkPointId == orderRequest.WorkPointId);
+            }
+
+            if (orderRequest.Status != null)
+            {
+                orders = orders.FindAll(x => x.Status == orderRequest.Status);
+            }
+
             var dtoList = orders.Select(x => new OrderDTO(x.Id, x.OrderNo, x.Date, x.WorkPointId, x.Status));
 
             return new JsonResult(dtoList);
@@ -47,26 +58,6 @@ namespace Api2.Controllers
             var userOrders = await _orderService.WhereAsync(x => x.CreatedBy == id);
             
             return Ok(userOrders);
-        }
-
-        [HttpGet]
-        //[Authorize]
-        [Route("getOrdersByStatus/{status}")]
-        public async Task<IActionResult> GetCompanyByNameAsync(string status)
-        {
-            var orders = await _orderService.WhereAsync(x => x.Status == status);
-
-            return new JsonResult(orders);
-        }
-
-        [HttpGet]
-        //[Authorize]
-        [Route("getOrdersByWorkpoint/{workpointId}")]
-        public async Task<IActionResult> GetCompanyByWorkpoint(int workpointId)
-        {
-            var workpointOrders = await _orderService.WhereAsync(x => x.WorkPointId == workpointId);
-            
-            return Ok(workpointOrders);
         }
 
         [HttpGet]
