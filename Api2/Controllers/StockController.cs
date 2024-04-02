@@ -37,6 +37,23 @@ namespace Api2.Controllers
             }
             return new JsonResult(resList);
         }
+
+
+        [HttpPut]
+        //[Authorize]
+        [Route("updateStock")]
+        public async Task<IActionResult> UpdateWorkpointAsync([FromBody] StockDTO stockRequest)
+        {
+            var stock = await _stockService.GetByIdAsync(stockRequest.Id);
+
+            stock.AvailableStock = stockRequest.AvailableStock;
+            stock.DateUpdated = DateTime.UtcNow;
+
+            await _stockService.UpdateAsync(stock);
+
+            var entityResult = await _stockService.GetByIdAsync(stockRequest.Id);
+            return new JsonResult(entityResult);
+        }
     }
 
 }

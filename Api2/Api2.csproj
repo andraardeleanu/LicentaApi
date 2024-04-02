@@ -10,6 +10,7 @@
   <PropertyGroup Condition=" '$(RunConfiguration)' == 'https' " />
   <PropertyGroup Condition=" '$(RunConfiguration)' == 'http' " />
   <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="13.0.1" />
     <PackageReference Include="FluentValidation" Version="11.9.0" />
     <PackageReference Include="FluentValidation.AspNetCore" Version="11.3.0" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.9.0" />
@@ -22,6 +23,8 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" />
+    <PackageReference Include="OpenXmlDocument.WordProcessing" Version="1.4.0" />
+    <PackageReference Include="PDFsharp" Version="6.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="6.5.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.5.0" />
@@ -35,8 +38,5 @@
   <ItemGroup>
     <None Remove="Services\" />
     <None Remove="Services\Interfaces\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Services\Interfaces\" />
   </ItemGroup>
 </Project>

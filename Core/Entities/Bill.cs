@@ -12,6 +12,7 @@ namespace Core.Entities
         public string OrderNo { get; set; }               
         public decimal TotalPrice { get; set; }
         public string Status { get; set; }
+        public string CreatedBy { get; set; }
         public int OrderId { get; set; }
         public virtual Order Order { get; set; }
     }

@@ -6,18 +6,18 @@
         public DateTime Date { get; set; }
         public string OrderNo { get; set; }
         public string CreatedBy { get; set; }
-        public string CompanyId { get; set; }
-        public string WorkPointId { get; set; }
-        public string TotalPrice { get; set; }
+        public string CompanyName { get; set; }
+        public string WorkpointName { get; set; }
+        public decimal TotalPrice {  get; set; }         
         public string Status { get; set; }
-        public BillsDTO(string id, string orderNo, DateTime date, string createdBy, string companyId, string workPointId, string totalPrice, string status)
+        public BillsDTO(string id, DateTime date, string orderNo, string createdBy, string companyName, string workpointName, decimal totalPrice, string status)
         {
             Id = id;
             Date = date;
             OrderNo = orderNo;
             CreatedBy = createdBy;
-            CompanyId = companyId;
-            WorkPointId = workPointId;
+            CompanyName = companyName;
+            WorkpointName = workpointName;
             TotalPrice = totalPrice;
             Status = status;
         }

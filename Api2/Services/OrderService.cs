@@ -74,7 +74,6 @@ namespace Api2.Services
             return stock;
         }
 
-
         private async Task<bool> UpdateStock(ProductDetails product, Stock stock)
         {
             try

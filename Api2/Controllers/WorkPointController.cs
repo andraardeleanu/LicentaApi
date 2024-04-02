@@ -69,10 +69,13 @@ namespace Api2.Controllers
         }
 
         [HttpPut]
-        [Authorize]
+        //[Authorize]
         [Route("updateWorkpoint")]
         public async Task<IActionResult> UpdateWorkpointAsync([FromBody] WorkPointDTO workpointRequest)
         {
+            var existingWorkpoint = await _workpointService.WhereAsync(x => x.Name == workpointRequest.Name && x.Address == workpointRequest.Address);
+            if (existingWorkpoint != null && existingWorkpoint.Any()) return BadRequest(ErrorMessages.ExistingWorkpoint);
+
             var workpoint = await _workpointService.GetByIdAsync(workpointRequest.Id);
 
             workpoint.Name = workpointRequest.Name;
@@ -81,7 +84,7 @@ namespace Api2.Controllers
 
             await _workpointService.UpdateAsync(workpoint);
 
-            var entityResult = await _workpointService.GetByIdAsync(workpointRequest.Id, x => x.Name, x => x.Address);
+            var entityResult = await _workpointService.GetByIdAsync(workpointRequest.Id);
             return new JsonResult(entityResult);
         }
 

@@ -74,23 +74,22 @@ namespace Api2.Controllers
             var company = await _companyService.AddAsync(companyEntity);
 
             return new JsonResult(company);
-
         }
 
         [HttpPut]
-        [Authorize]
+        //[Authorize]
         [Route("updateCompany")]
         public async Task<IActionResult> UpdateCompanyAsync([FromBody] CompanyDTO companyRequest)
         {
-            var workpoint = await _companyService.GetByIdAsync(companyRequest.Id);
+            var company = await _companyService.GetByIdAsync(companyRequest.Id);
 
-            workpoint.Name = companyRequest.Name;
-            workpoint.Cui = companyRequest.Cui;
-            workpoint.DateUpdated = DateTime.UtcNow;
+            company.Name = companyRequest.Name;
+            company.DateUpdated = DateTime.UtcNow;
+            company.DateUpdated = DateTime.UtcNow;
 
-            await _companyService.UpdateAsync(workpoint);
+            await _companyService.UpdateAsync(company);
 
-            var entityResult = await _companyService.GetByIdAsync(companyRequest.Id, x => x.Name, x => x.Cui);
+            var entityResult = await _companyService.GetByIdAsync(companyRequest.Id);
             return new JsonResult(entityResult);
         }
 

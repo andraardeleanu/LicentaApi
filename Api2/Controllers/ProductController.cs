@@ -1,6 +1,7 @@
 ﻿using Api2.ApiModels;
 using Api2.Mapping;
 using Api2.Requests;
+using Core.Constants;
 using Core.Entities;
 using Core.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -43,8 +44,8 @@ namespace Api2.Controllers
         public async Task<IActionResult> AddProductAsync([FromBody] ProductRequest productRequest, int availableStock)
         {
             var existingProduct = await _productService.WhereAsync(x => x.Name == productRequest.Name);
-            if (existingProduct != null && existingProduct.Any()) return BadRequest("Exista deja un produs cu acest nume.");
-            if (availableStock <= 0) return BadRequest("Nu se pot crea produse cu stoc mai mic sau egal cu 0.");
+            if (existingProduct != null && existingProduct.Any()) return BadRequest(ErrorMessages.ExistingProduct);
+            if (availableStock <= 0) return BadRequest(ErrorMessages.InvalidStock);
 
             var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "admin";
             var productEntity = productRequest.ToProductEntity(username);
