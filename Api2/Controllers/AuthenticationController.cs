@@ -34,7 +34,7 @@ namespace Api2.Controllers
             var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var user = await _userManager.FindByNameAsync(username);
             var userRoles = await _userManager.GetRolesAsync(user);
-            var userCompanies = await _companyService.WhereAsync(c => c.CreatedBy == user.Id);
+            var userCompanies = await _companyService.WhereAsync(c => c.Id == user.CompanyId);
 
             return new JsonResult(new UserDTO(user.Id, user.FirstName, user.LastName, userCompanies, user.UserName, userRoles));
         }

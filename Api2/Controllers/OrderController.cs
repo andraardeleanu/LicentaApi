@@ -36,6 +36,11 @@ namespace Api2.Controllers
         {
             var orders = await _orderService.ListAsync();
 
+            if(orderRequest.OrderNo != null)
+            {
+                orders = orders.FindAll(order => order.OrderNo.ToString().Contains(orderRequest.OrderNo.ToString()!));
+            }
+
             if (orderRequest.WorkPointId != null)
             {
                 orders = orders.FindAll(x => x.WorkPointId == orderRequest.WorkPointId);
