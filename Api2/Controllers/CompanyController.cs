@@ -3,12 +3,14 @@ using Api2.Mapping;
 using Api2.Requests;
 using Core.Constants;
 using Core.Entities;
+using Core.Models;
 using Core.Services.Interfaces;
 using Infra.Data.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using static Core.Common.Enums;
 
 namespace Api2.Controllers
 {
@@ -67,30 +69,56 @@ namespace Api2.Controllers
             var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var user = await _userManager.FindByNameAsync(username);
 
-            var existingCompany = await _companyService.WhereAsync(x => x.Cui == companyRequest.Cui);
-            if (existingCompany != null && existingCompany.Any()) return BadRequest(ErrorMessages.ExistingCui);
-
-            var companyEntity = companyRequest.ToCompanyEntity(user.Id, username);
-            var company = await _companyService.AddAsync(companyEntity);
-
-            return new JsonResult(company);
+            if (string.IsNullOrWhiteSpace(companyRequest.Name) || string.IsNullOrWhiteSpace(companyRequest.Cui))
+            {
+                return BadRequest(new Result(ErrorMessages.AllFieldsAreMandatory));
+            } else
+            {
+                var existingCompany = await _companyService.WhereAsync(x => x.Name == companyRequest.Name);
+                if (existingCompany != null && existingCompany.Any())
+                {
+                    return BadRequest(new Result(ErrorMessages.ExistingCompanyName));
+                }
+                else
+                {
+                    var companyEntity = companyRequest.ToCompanyEntity(user.Id, username);
+                    var company = await _companyService.AddAsync(companyEntity);
+                    return Ok(new Result());
+                }
+            }                   
         }
 
-        [HttpPut]
+        [HttpPost]
         //[Authorize]
         [Route("updateCompany")]
-        public async Task<IActionResult> UpdateCompanyAsync([FromBody] CompanyDTO companyRequest)
+        public async Task<IActionResult> UpdateCompanyAsync([FromBody] UpdateCompanyRequest companyRequest)
         {
-            var company = await _companyService.GetByIdAsync(companyRequest.Id);
+            var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var user = await _userManager.FindByNameAsync(username);
 
-            company.Name = companyRequest.Name;
-            company.DateUpdated = DateTime.UtcNow;
-            company.DateUpdated = DateTime.UtcNow;
+            if (string.IsNullOrWhiteSpace(companyRequest.Name))
+            {
+                return BadRequest(new Result(ErrorMessages.AllFieldsAreMandatory));
+            }
+            else
+            {
+                var existingCompany = await _companyService.WhereAsync(x => x.Name == companyRequest.Name);
+                if (existingCompany != null && existingCompany.Any())
+                {
+                    return BadRequest(new Result(ErrorMessages.ExistingCompanyName));
+                }
+                else
+                {
+                    var company = await _companyService.GetByIdAsync(companyRequest.Id);
 
-            await _companyService.UpdateAsync(company);
+                    company.Name = companyRequest.Name;
+                    company.DateUpdated = DateTime.UtcNow;
 
-            var entityResult = await _companyService.GetByIdAsync(companyRequest.Id);
-            return new JsonResult(entityResult);
+                    await _companyService.UpdateAsync(company);
+
+                    return Ok(new Result());
+                }
+            }
         }
 
         [HttpDelete]

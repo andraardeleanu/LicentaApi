@@ -1,7 +1,11 @@
 using Api2.ApiModels;
+using Api2.Requests;
+using Core.Constants;
 using Core.Entities;
+using Core.Models;
 using Core.Services.Interfaces;
 using Infra.Data.Auth;
+using LanguageExt;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -136,12 +140,22 @@ namespace Api2.Controllers
         //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> RegisterinAsync([FromBody] RegisterDTO model)
         {
-            var existingUser = await _userManager.FindByNameAsync(model.Username);
-            if (existingUser != null) return Unauthorized("Username already exists! Try to choose another one.");
+            if (string.IsNullOrWhiteSpace(model.Username) || string.IsNullOrWhiteSpace(model.FirstName) || string.IsNullOrWhiteSpace(model.LastName) || string.IsNullOrWhiteSpace(model.Password) || string.IsNullOrWhiteSpace(model.Email))
+            {
+                return BadRequest(new Result(ErrorMessages.AllFieldsAreMandatory));
+            }
 
-            var existingCompany = await _companyService.GetByIdAsync(model.CompanyId);
-            if (model.CompanyId == null) return Unauthorized("Trebuie sa asignezi noul user unei Companii. Daca aceasta nu exista poti sa o creezi din tab-ul Companii.");
-            if (existingCompany == null) return Unauthorized("Compania aleasa nu exista. Alege una dintre companiile existente.");
+            var existingUser = await _userManager.FindByNameAsync(model.Username);
+            if (existingUser != null) return BadRequest(new Result(ErrorMessages.ExistingUsername));
+
+            try
+            {
+                var existingCompany = await _companyService.GetByIdAsync(model.CompanyId);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new Result(ErrorMessages.InvalidCompany));
+            }
 
             var appUser = new ApplicationUser
             {
@@ -156,7 +170,7 @@ namespace Api2.Controllers
 
             var role = await _userManager.AddToRoleAsync(appUser, "Customer");
 
-            return Created();
+            return Ok(new Result());
         }
 
         [HttpPatch("changePassword")]

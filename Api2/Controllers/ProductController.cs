@@ -3,6 +3,7 @@ using Api2.Mapping;
 using Api2.Requests;
 using Core.Constants;
 using Core.Entities;
+using Core.Models;
 using Core.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +12,7 @@ using System.Security.Claims;
 namespace Api2.Controllers
 {
     public class ProductController : ControllerBase
-    { 
+    {
         private readonly IGenericService<Product> _productService;
         private readonly IGenericService<Stock> _stockService;
 
@@ -41,11 +42,25 @@ namespace Api2.Controllers
         [HttpPost]
         //[Authorize]
         [Route("addProduct")]
-        public async Task<IActionResult> AddProductAsync([FromBody] ProductRequest productRequest, int availableStock)
+        public async Task<IActionResult> AddProductAsync([FromBody] ProductRequest productRequest)
         {
-            var existingProduct = await _productService.WhereAsync(x => x.Name == productRequest.Name);
-            if (existingProduct != null && existingProduct.Any()) return BadRequest(ErrorMessages.ExistingProduct);
-            if (availableStock <= 0) return BadRequest(ErrorMessages.InvalidStock);
+            if (string.IsNullOrWhiteSpace(productRequest.Name))
+            {
+                return BadRequest(new Result(ErrorMessages.AllFieldsAreMandatory));
+            }
+            else if (productRequest.AvailableStock <= 0)
+            {
+                return BadRequest(new Result(ErrorMessages.InvalidStock));
+            }
+            else if (productRequest.Price <= 0)
+            {
+                return BadRequest(new Result(ErrorMessages.InvalidPrice));
+            }
+            else
+            {
+                var existingProduct = await _productService.WhereAsync(x => x.Name == productRequest.Name);
+                if (existingProduct != null && existingProduct.Any()) return BadRequest(new Result(ErrorMessages.ExistingProduct));
+            }
 
             var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "admin";
             var productEntity = productRequest.ToProductEntity(username);
@@ -54,15 +69,15 @@ namespace Api2.Controllers
             var stockEntity = new Stock
             {
                 ProductId = product.Id,
-                AvailableStock = availableStock,
+                AvailableStock = productRequest.AvailableStock,
                 PendingStock = 0,
                 Author = username,
-                DateCreated = DateTime.UtcNow              
+                DateCreated = DateTime.UtcNow
             };
 
             var stock = await _stockService.AddAsync(stockEntity);
 
-            return new JsonResult(product);
+            return Ok(new Result());
         }
 
         [HttpPut]

@@ -43,6 +43,16 @@ namespace Api2.Controllers
         }
 
         [HttpGet]
+        //[Authorize]
+        [Route("getWorkpointBy/{id}")]
+        public async Task<IActionResult> GetWorkpointByIdAsync(int id)
+        {
+            var workpoint = await _workpointService.GetByIdAsync(id);
+
+            return new JsonResult(workpoint);
+        }
+
+        [HttpGet]
         [Authorize]
         [Route("getWorkpointsByUserId/{userId}")]
         public async Task<IActionResult> GetWorkpointsByUserIdAsync(string userId)

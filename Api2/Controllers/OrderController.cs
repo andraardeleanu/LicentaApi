@@ -11,6 +11,8 @@ using Core.Common;
 using Microsoft.AspNetCore.Identity;
 using Infra.Data.Auth;
 using Core.Constants;
+using Microsoft.IdentityModel.Tokens;
+using Core.Models;
 
 namespace Api2.Controllers
 {
@@ -20,13 +22,19 @@ namespace Api2.Controllers
         private readonly IGenericService<OrderProduct> _orderProductService;
         private readonly IOrderService _orderServiceTest;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IGenericService<WorkPoint> _workpointService;
 
-        public OrderController(IGenericService<Order> orderService, IGenericService<OrderProduct> orderProductService, IOrderService orderServiceTest, UserManager<ApplicationUser> userManager)
+        public OrderController(IGenericService<Order> orderService,
+            IGenericService<OrderProduct> orderProductService,
+            IOrderService orderServiceTest,
+            UserManager<ApplicationUser> userManager,
+            IGenericService<WorkPoint> workpointService)
         {
             _orderService = orderService;
             _orderProductService = orderProductService;
             _orderServiceTest = orderServiceTest;
             _userManager = userManager;
+            _workpointService = workpointService;
         }
 
         [HttpGet]
@@ -36,7 +44,7 @@ namespace Api2.Controllers
         {
             var orders = await _orderService.ListAsync();
 
-            if(orderRequest.OrderNo != null)
+            if (orderRequest.OrderNo != null)
             {
                 orders = orders.FindAll(order => order.OrderNo.ToString().Contains(orderRequest.OrderNo.ToString()!));
             }
@@ -48,7 +56,7 @@ namespace Api2.Controllers
 
             if (orderRequest.Status != null)
             {
-                orders = orders.FindAll(x => x.Status == orderRequest.Status);
+                orders = orders.FindAll(order => order.Status.ToString().Contains(orderRequest.Status.ToString()!));
             }
 
             var dtoList = orders.Select(x => new OrderDTO(x.Id, x.OrderNo, x.Date, x.WorkPointId, x.Status));
@@ -64,6 +72,31 @@ namespace Api2.Controllers
             var userOrders = await _orderService.WhereAsync(x => x.CreatedBy == id);
 
             return Ok(userOrders);
+        }
+
+        [HttpPost]
+        //[Authorize]
+        [Route("updateOrderStatus/{orderId}")]
+        public async Task<IActionResult> UpdateOrderStatusAsync(int orderId)
+        {
+            try
+            {
+                var order = await _orderService.GetByIdAsync(orderId);
+
+                if (order.Status == Enums.OrderStatus.Processed.ToString()) return BadRequest(new Result(ErrorMessages.OrderStatusError));
+
+                order.Status = Enums.OrderStatus.Processed.ToString();
+                order.DateUpdated = DateTime.UtcNow;
+
+                await _orderService.UpdateAsync(order);
+
+                return Ok(new Result());
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new Result(ErrorMessages.InvalidData));
+            }
         }
 
         [HttpGet]
@@ -90,33 +123,63 @@ namespace Api2.Controllers
         [Route("addOrder")]
         public async Task<IActionResult> CreateOrderAsync([FromBody] OrderRequest orderRequest)
         {
-            var encounteredProductIds = new HashSet<int>();
-            foreach (var product in orderRequest.Products)
+            try
             {
-                if (encounteredProductIds.Contains(product.ProductId))
-                {
-                    return BadRequest(ErrorMessages.DuplicatedProduct + product.ProductId);
-                }
-                encounteredProductIds.Add(product.ProductId);
+                var existingCompany = await _workpointService.GetByIdAsync(orderRequest.WorkPointId);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new Result(ErrorMessages.InvalidWorkpoint));
             }
 
-            var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var user = await _userManager.FindByNameAsync(username);
+            if (orderRequest.Products.IsNullOrEmpty())
+            {
+                return BadRequest(new Result(ErrorMessages.EmptyProductList));
+            }
+            else
+            {
+                var encounteredProductIds = new HashSet<int>();
+                foreach (var product in orderRequest.Products)
+                {
+                    if (encounteredProductIds.Contains(product.ProductId))
+                    {
+                        return BadRequest(new Result(ErrorMessages.DuplicatedProduct));
+                    }
 
-            orderRequest.Author = username;
-            orderRequest.CreatedBy = user.Id;
-            var res = await _orderServiceTest.AddOrderAsync(orderRequest, Enums.OrderType.Manual);
-            return new JsonResult(res);
+                    else if (product.Quantity < 0)
+                    {
+                        return BadRequest(new Result(ErrorMessages.InvalidQuantity));
+                    }
+
+                    encounteredProductIds.Add(product.ProductId);
+                }
+
+                var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                var user = await _userManager.FindByNameAsync(username);
+
+                orderRequest.Author = username;
+                orderRequest.CreatedBy = user.Id;
+
+                var res = await _orderServiceTest.AddOrderAsync(orderRequest, Enums.OrderType.Manual);
+                return Ok(new Result());
+            }
         }
 
         [HttpPost]
         [Route("addOrdersFromFile")]
         public async Task<IActionResult> CreateOrdersFromCsvAsync(IFormFile file, [FromForm] int workPointId)
         {
+            var ext = Path.GetExtension(file.FileName);
+
+            if (ext != ".csv")
+            {
+                return BadRequest(ErrorMessages.InvalidFileExtension);
+            }
             if (file == null || file.Length <= 0)
             {
-                return BadRequest("Invalid file.");
+                return BadRequest(ErrorMessages.InvalidFile);
             }
+
             var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "admin";
             var user = await _userManager.FindByNameAsync(username);
 
@@ -136,7 +199,7 @@ namespace Api2.Controllers
                             {
                                 if (encounteredProductIds.Contains(productId))
                                 {
-                                    return BadRequest($"Duplicate product ID encountered: {productId}. Product IDs must be unique.");
+                                    return BadRequest(ErrorMessages.DuplicatedProduct + productId);
                                 }
 
                                 products.Add(new ProductDetails

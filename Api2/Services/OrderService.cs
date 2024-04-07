@@ -6,6 +6,7 @@ using Api2.Services.Interfaces;
 using Api2.ApiModels;
 using System.Linq;
 using Core.Common;
+using DocumentFormat.OpenXml.Drawing;
 
 namespace Api2.Services
 {

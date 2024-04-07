@@ -2,8 +2,6 @@ using Api2.Infrastructure;
 using Infra;
 using Core;
 using FluentValidation.AspNetCore;
-using FluentValidation;
-using Api2.Validators;
 using Api2.Services;
 using Core.Middleware;
 
@@ -25,7 +23,7 @@ builder.Services.AddSwaggerSetup();
 builder.Services.RegisterCoreDependencies();
 builder.Services.RegisterApiDependencies();
 
-builder.Services.AddValidatorsFromAssemblyContaining<CompanyValidator>();
+//builder.Services.AddValidatorsFromAssemblyContaining<CompanyValidator>();
 builder.Services.AddFluentValidationAutoValidation();
 
 

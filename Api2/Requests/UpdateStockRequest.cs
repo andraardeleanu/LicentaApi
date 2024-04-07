@@ -1,8 +1,8 @@
 ﻿namespace Api2.Requests
 {
-    public class StockRequest
+    public class UpdateStockRequest
     {
-        public int PorductId { get; set; }
+        public int StockId { get; set; }
         public int AvailableStock { get; set; }
     }
 }

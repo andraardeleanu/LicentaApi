@@ -1,6 +1,11 @@
 ﻿using Api2.ApiModels;
+using Api2.Requests;
+using Core.Constants;
 using Core.Entities;
+using Core.Models;
 using Core.Services.Interfaces;
+using DocumentFormat.OpenXml.Office2010.Excel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api2.Controllers
@@ -39,20 +44,53 @@ namespace Api2.Controllers
         }
 
 
-        [HttpPut]
+        [HttpGet]
         //[Authorize]
-        [Route("updateStock")]
-        public async Task<IActionResult> UpdateWorkpointAsync([FromBody] StockDTO stockRequest)
+        [Route("getStockById/{id}")]
+        public async Task<IActionResult> GetStockByIdAsync(int id)
         {
-            var stock = await _stockService.GetByIdAsync(stockRequest.Id);
+            var stock = await _stockService.GetByIdAsync(id);
 
-            stock.AvailableStock = stockRequest.AvailableStock;
-            stock.DateUpdated = DateTime.UtcNow;
+            return new JsonResult(stock);
+        }
 
-            await _stockService.UpdateAsync(stock);
+        [HttpGet]
+        //[Authorize]
+        [Route("getStockByProductId/{productId}")]
+        public async Task<IActionResult> GetStockByProductIdAsync(int productId)
+        {
+            var productStock = await _stockService.WhereAsync(x => x.ProductId == productId);
 
-            var entityResult = await _stockService.GetByIdAsync(stockRequest.Id);
-            return new JsonResult(entityResult);
+            return new JsonResult(productStock);
+        }
+
+
+        [HttpPost]
+        //[Authorize]
+        [Route("updateStock/")]
+        public async Task<IActionResult> UpdateWorkpointAsync([FromBody] UpdateStockRequest updateStockRequest)
+        {
+            if (updateStockRequest.AvailableStock <= 0)
+            {
+                return BadRequest(new Result(ErrorMessages.InvalidStock));
+            }
+            
+            try
+            {
+                var stock = await _stockService.GetByIdAsync(updateStockRequest.StockId);
+
+                stock.AvailableStock = updateStockRequest.AvailableStock;
+                stock.DateUpdated = DateTime.UtcNow;
+
+                await _stockService.UpdateAsync(stock);
+
+                var entityResult = await _stockService.GetByIdAsync(updateStockRequest.StockId);
+                return new JsonResult(entityResult);
+
+            } catch (Exception ex)
+            {
+                return BadRequest(new Result(ErrorMessages.InvalidData));
+            }            
         }
     }
 

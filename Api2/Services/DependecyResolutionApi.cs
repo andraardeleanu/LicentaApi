@@ -1,7 +1,6 @@
 ﻿using Api2.Services.Interfaces;
 using FluentValidation.AspNetCore;
 using FluentValidation;
-using Api2.Validators;
 using Api2.Helpers.Interfaces;
 using Api2.Helpers;
 
@@ -18,10 +17,10 @@ namespace Api2.Services
             services.AddTransient<IOrderBillDocumentHelper, OrderBillDocumentHelper>();
         }
 
-        public static void ConfigureFluentValidation(this IServiceCollection services)
-        {
-            services.AddValidatorsFromAssemblyContaining<CompanyValidator>();
-            services.AddFluentValidationAutoValidation();
-        }
+        //public static void ConfigureFluentValidation(this IServiceCollection services)
+        //{
+        //    services.AddValidatorsFromAssemblyContaining<CompanyValidator>();
+        //    services.AddFluentValidationAutoValidation();
+        //}
     }
 }

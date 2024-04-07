@@ -28,6 +28,7 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="6.5.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.5.0" />
+    <PackageReference Include="System.IO" Version="4.3.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -38,5 +39,9 @@
   <ItemGroup>
     <None Remove="Services\" />
     <None Remove="Services\Interfaces\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Validators\" />
   </ItemGroup>
 </Project>

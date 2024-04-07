@@ -13,7 +13,7 @@ namespace Api2.Mapping
             {
                 Date = DateTime.Now,
                 Author = user,
-                CreatedBy=request.CreatedBy,//delete it
+                CreatedBy=request.CreatedBy,
                 OrderNo = Guid.NewGuid(),
                 Status= OrderStatus.Initialized.ToString(),
                 WorkPointId=request.WorkPointId
@@ -27,6 +27,7 @@ namespace Api2.Mapping
                 Id = order.Id,
                 OrderNo = order.OrderNo,
                 Date = order.Date,
+                OrderType = order.OrderType,
                 WorkPointId = order.WorkPointId,
                 Status = order.Status,
                 Products = products
