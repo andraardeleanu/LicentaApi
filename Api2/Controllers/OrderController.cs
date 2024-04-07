@@ -167,7 +167,7 @@ namespace Api2.Controllers
 
         [HttpPost]
         [Route("addOrdersFromFile")]
-        public async Task<IActionResult> CreateOrdersFromCsvAsync(IFormFile file, [FromForm] int workPointId)
+        public async Task<IActionResult> CreateOrdersFromCsvAsync([FromForm] IFormFile file, [FromForm] int workPointId)
         {
             var ext = Path.GetExtension(file.FileName);
 
