@@ -1,4 +1,5 @@
 ﻿using Core.Entities;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using System.Data;
 
 namespace Api2.ApiModels
@@ -11,7 +12,8 @@ namespace Api2.ApiModels
         public IList<Company> Companies { get; set; }
         public string Username { get; set; }
         public IList<string> Roles { get; set; }
-        public UserDTO(string id, string firstName, string lastName, IList<Company> companies, string username, IList<string> role)
+        public string Email { get; set; }
+        public UserDTO(string id, string firstName, string lastName, IList<Company> companies, string username, IList<string> role, string email)
         {
             Id = id;
             FirstName = firstName;
@@ -19,6 +21,7 @@ namespace Api2.ApiModels
             Companies = companies;
             Username = username;
             Roles = role;
+            Email = email;
         }
     }
 }

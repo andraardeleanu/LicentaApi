@@ -3,6 +3,7 @@ using Api2.Mapping;
 using Api2.Requests;
 using Core.Constants;
 using Core.Entities;
+using Core.Models;
 using Core.Services.Interfaces;
 using Infra.Data.Auth;
 using Microsoft.AspNetCore.Authorization;
@@ -16,14 +17,16 @@ namespace Api2.Controllers
     public class WorkPointController : ControllerBase
     {
         private readonly IGenericService<WorkPoint> _workpointService;
-        private readonly IGenericService<Company> _companyService;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IGenericService<Order> _orderService;
 
-        public WorkPointController(IGenericService<WorkPoint> workpointService, IGenericService<Company> companyService, UserManager<ApplicationUser> userManager)
+        public WorkPointController(IGenericService<WorkPoint> workpointService, 
+            UserManager<ApplicationUser> userManager, 
+            IGenericService<Order> orderService)
         {
             _workpointService = workpointService;
-            _companyService = companyService;
             _userManager = userManager;
+            _orderService = orderService;
         }
 
         [HttpGet]
@@ -33,7 +36,7 @@ namespace Api2.Controllers
         {
             var workpoints = await _workpointService.ListAsync();
 
-            if(workpointFilterRequest.Name != null)
+            if (workpointFilterRequest.Name != null)
             {
                 workpoints = workpoints.FindAll(x => x.Name.Contains(workpointFilterRequest.Name));
             }
@@ -65,48 +68,82 @@ namespace Api2.Controllers
         [Authorize]
         [Route("addWorkpoint")]
         public async Task<IActionResult> AddWorkpointAsync([FromBody] WorkpointRequest workpointRequest)
-        {
-            var existingWorkpoint = await _workpointService.WhereAsync(x => x.Name == workpointRequest.Name && x.Address == workpointRequest.Address);
-            if (existingWorkpoint != null && existingWorkpoint.Any()) return BadRequest(ErrorMessages.ExistingWorkpoint);
-
+        {           
             var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var user = await _userManager.FindByNameAsync(username);
-
-            var workpointEntity = workpointRequest.ToWorkpointEntity(user.Id, username);
-            var workpoint = await _workpointService.AddAsync(workpointEntity);
-
-            return new JsonResult(workpoint);
+           
+            if (string.IsNullOrWhiteSpace(workpointRequest.Name) || string.IsNullOrWhiteSpace(workpointRequest.Address))
+            {
+                return BadRequest(new Result(ErrorMessages.AllFieldsAreMandatory));
+            }
+            else
+            {
+                var existingWorkpoint = await _workpointService.WhereAsync(x => x.Name == workpointRequest.Name && x.Address == workpointRequest.Address);
+                if (existingWorkpoint != null && existingWorkpoint.Any())
+                {
+                    return BadRequest(new Result(ErrorMessages.ExistingWorkpoint));
+                }
+                else
+                {
+                    workpointRequest.CompanyId = user.CompanyId;
+                    var workpointEntity = workpointRequest.ToWorkpointEntity(user.Id, username);
+                    var workpoint = await _workpointService.AddAsync(workpointEntity);
+                    return Ok(new Result());
+                }
+            }
         }
 
-        [HttpPut]
+        [HttpPost]
         //[Authorize]
         [Route("updateWorkpoint")]
-        public async Task<IActionResult> UpdateWorkpointAsync([FromBody] WorkPointDTO workpointRequest)
+        public async Task<IActionResult> UpdateCompanyAsync([FromBody] UpdateWorkpointRequest workpointRequest)
         {
-            var existingWorkpoint = await _workpointService.WhereAsync(x => x.Name == workpointRequest.Name && x.Address == workpointRequest.Address);
-            if (existingWorkpoint != null && existingWorkpoint.Any()) return BadRequest(ErrorMessages.ExistingWorkpoint);
-
+            var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var user = await _userManager.FindByNameAsync(username);
             var workpoint = await _workpointService.GetByIdAsync(workpointRequest.Id);
 
-            workpoint.Name = workpointRequest.Name;
-            workpoint.Address = workpointRequest.Address;
-            workpoint.DateUpdated = DateTime.UtcNow;
+            if (string.IsNullOrWhiteSpace(workpointRequest.Name) || string.IsNullOrWhiteSpace(workpointRequest.Address))
+            {
+                return BadRequest(new Result(ErrorMessages.AllFieldsAreMandatory));
+            }
 
-            await _workpointService.UpdateAsync(workpoint);
+            else
+            {
+                var existingCompany = await _workpointService.WhereAsync(x => x.Name == workpointRequest.Name && x.Address == workpointRequest.Address);
+                if (existingCompany != null && existingCompany.Any())
+                {
+                    return BadRequest(new Result(ErrorMessages.ExistingWorkpoint));
+                }
+                else
+                {
+                    workpoint.Name = workpointRequest.Name;
+                    workpoint.Address = workpointRequest.Address;
+                    workpoint.DateUpdated = DateTime.UtcNow;
 
-            var entityResult = await _workpointService.GetByIdAsync(workpointRequest.Id);
-            return new JsonResult(entityResult);
+                    await _workpointService.UpdateAsync(workpoint);
+
+                    return Ok(new Result());
+                }
+            }           
         }
 
-        [HttpDelete]
+        [HttpPost]
         [Authorize]
         [Route("removeWorkpoint")]
-        public async Task<IActionResult> RemoveWorkpointAsync(int id)
+        public async Task<IActionResult> RemoveWorkpointAsync([FromBody] int id)
         {
-            var workpoint = await _workpointService.GetByIdAsync(id);
-            await _workpointService.DeleteAsync(workpoint);
+            var workpointsOrders = await _orderService.WhereAsync(x => x.WorkPointId == id);
+            if(workpointsOrders != null && workpointsOrders.Any())
+            {
+                return BadRequest(new Result(ErrorMessages.CannotDeleteWorkpoint));
+            }
+            else
+            {
+                var workpoint = await _workpointService.GetByIdAsync(id);
+                await _workpointService.DeleteAsync(workpoint);
 
-            return Ok();
+                return Ok();
+            }            
         }
 
         [HttpGet]

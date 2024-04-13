@@ -17,11 +17,11 @@ namespace Api2.Services
             {
                 var docxStream = _orderBillDocumentHelper.GenerateOrderBillDocument(billsDTO);
 
-                //var pdfStream = await _documentConverterService.ConvertAsync(docxStream.MemoryStream!);
+                var pdfStream = await _documentConverterService.ConvertToPdfAsync(docxStream.MemoryStream!);
 
                 var file = new GenericFileDTO()
                 {
-                    Blob = Convert.ToBase64String(docxStream!.MemoryStream.ToArray()),
+                    Blob = Convert.ToBase64String(pdfStream!.ToArray()),
                     FileName = OrderBillInformation.BILL_FILE_NAME                    
                 };
                 

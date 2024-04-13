@@ -160,24 +160,45 @@ namespace Api2.Controllers
                 orderRequest.Author = username;
                 orderRequest.CreatedBy = user.Id;
 
+                // Adaugi comanda și obții răspunsul
                 var res = await _orderServiceTest.AddOrderAsync(orderRequest, Enums.OrderType.Manual);
-                return Ok(new Result());
+
+                // Verifici dacă comanda a fost adăugată cu succes
+                if (res.StatusCode == 200)
+                {
+                    // Actualizezi entitatea comenzii cu prețul total
+                    var data = (dynamic)res.Data;
+                    var orderTotalPrice = data.TotalPrice;
+                    var orderId = data.OrderId;
+                    var orderEntity = await _orderService.GetByIdAsync(orderId);
+                    orderEntity.TotalPrice = orderTotalPrice;
+
+                    // Salvezi modificările în baza de date
+                    await _orderService.UpdateAsync(orderEntity);
+
+                    return Ok(new Result());
+                }
+                else
+                {
+                    // În caz de eșec, întorci răspunsul original al metodei AddOrderAsync
+                    return StatusCode(res.StatusCode, res.Data);
+                }
             }
         }
 
         [HttpPost]
         [Route("addOrdersFromFile")]
-        public async Task<IActionResult> CreateOrdersFromCsvAsync([FromForm] IFormFile file, [FromForm] int workPointId)
+        public async Task<IActionResult> CreateOrdersFromCsvAsync(IFormFile file, [FromForm] int workPointId)
         {
             var ext = Path.GetExtension(file.FileName);
 
             if (ext != ".csv")
             {
-                return BadRequest(ErrorMessages.InvalidFileExtension);
+                return BadRequest(new Result(ErrorMessages.InvalidFileExtension));
             }
             if (file == null || file.Length <= 0)
             {
-                return BadRequest(ErrorMessages.InvalidFile);
+                return BadRequest(new Result(ErrorMessages.InvalidFile));
             }
 
             var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "admin";
@@ -199,7 +220,7 @@ namespace Api2.Controllers
                             {
                                 if (encounteredProductIds.Contains(productId))
                                 {
-                                    return BadRequest(ErrorMessages.DuplicatedProduct + productId);
+                                    return BadRequest(new Result(ErrorMessages.DuplicatedProduct));
                                 }
 
                                 products.Add(new ProductDetails
@@ -207,7 +228,6 @@ namespace Api2.Controllers
                                     ProductId = productId,
                                     Quantity = quantity
                                 });
-
                                 encounteredProductIds.Add(productId);
                             }
                         }
@@ -226,17 +246,17 @@ namespace Api2.Controllers
 
                         await _orderServiceTest.AddOrderAsync(order, Enums.OrderType.File);
 
-                        return Ok("Order added successfully from CSV.");
+                        return Ok(new Result());
                     }
                     else
                     {
-                        return BadRequest("No valid products found in the CSV file.");
+                        return BadRequest(new Result(ErrorMessages.EmptyProductList));
                     }
                 }
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
+                return BadRequest(new Result(ErrorMessages.InvalidData));
             }
         }
     }

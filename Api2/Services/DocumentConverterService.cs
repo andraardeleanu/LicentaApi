@@ -1,4 +1,5 @@
 ﻿using Api2.Services.Interfaces;
+using Aspose.Words;
 using Core;
 using System.Diagnostics;
 
@@ -133,6 +134,30 @@ namespace Api2.Services
             finally
             {
                 _semaphore.Release();
+            }
+        }
+        public async Task<MemoryStream> ConvertToPdfAsync(MemoryStream docxFileStream)
+        {
+            try
+            {
+                // Incarcă documentul DOCX folosind Aspose.Words
+                var doc = new Document(docxFileStream);
+
+                // Creează un stream pentru fișierul PDF rezultat
+                var pdfStream = new MemoryStream();
+
+                // Salvează documentul ca PDF în stream
+                doc.Save(pdfStream, SaveFormat.Pdf);
+
+                // Resetează poziția stream-ului la început
+                pdfStream.Position = 0;
+
+                return pdfStream;
+            }
+            catch (Exception ex)
+            {
+                // Tratează excepțiile sau raportează eroarea
+                throw new Exception("Conversia în PDF a eșuat.", ex);
             }
         }
 

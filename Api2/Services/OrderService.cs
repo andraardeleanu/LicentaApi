@@ -7,6 +7,7 @@ using Api2.ApiModels;
 using System.Linq;
 using Core.Common;
 using DocumentFormat.OpenXml.Drawing;
+using System.Runtime.CompilerServices;
 
 namespace Api2.Services
 {
@@ -91,6 +92,19 @@ namespace Api2.Services
             }
         }
 
+        private async Task<decimal> GetProductPrice(int productId)
+        {
+            var product = await _productService.GetByIdAsync(productId);
+            if (product != null)
+            {
+                return product.Price;
+            }
+            else
+            {
+                throw new Exception("Product not found or price not available.");
+            }
+        }
+
         public async Task<GenericResponse<object>> AddOrderAsync(OrderRequest orderRequest, Enums.OrderType orderType)
         {
             var response = new GenericResponse<object>();
@@ -102,6 +116,9 @@ namespace Api2.Services
                 {
                     List<int> orderProductIds = new List<int>();
                     List<int> productIds = new List<int>();
+
+                    decimal totalPrice = 0; // Inițializează prețul total cu 0
+
                     foreach (var product in orderRequest.Products)
                     {
                         var stock = await CheckForStockStock(product);
@@ -120,11 +137,15 @@ namespace Api2.Services
                             break;
 
                         orderProductIds.Add(orderProductResult.Id);
+
+                        // Aici adaugi prețul produsului la prețul total al comenzii
+                        var productPrice = await GetProductPrice(product.ProductId); // presupunând că există o metodă pentru a obține prețul produsului
+                        totalPrice += productPrice * product.Quantity;
                     }
                     if (orderProductIds.Count == orderRequest.Products.Count && orderRequest.Products.Count == orderProductIds.Count)
                     {
                         response.StatusCode = 200;
-                        response.Data = new { OrderId = order.Id };
+                        response.Data = new { OrderId = order.Id, TotalPrice = totalPrice }; // Întoarce și prețul total al comenzii
                         return response;
                     }
                     else

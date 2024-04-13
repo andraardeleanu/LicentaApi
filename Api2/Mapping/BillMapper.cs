@@ -10,22 +10,22 @@ namespace Api2.Mapping
 {
     public static class BillMapper
     {
-        public static Bill ToBillEntity(this BillRequest request, string createdBy, string user)
+        public static Bill ToBillEntity(this BillRequest request, string user)
         {
             return new Bill()
             {
                 Status = request.Status,
                 OrderNo = request.OrderNo,
-                CreatedBy = createdBy,
+                CreatedBy = request.CreatedBy,
                 Author = user,
                 TotalPrice = request.TotalPrice,
                 DateCreated = DateTime.Now,
             };
         }
 
-        public static BillsDTO ToBillDTOEntity(this BillRequest request, string createdBy)
+        public static BillsDTO ToBillDTOEntity(this BillRequest request)
         {
-            return new BillsDTO(request.Id, DateTime.Now, request.OrderNo, createdBy, request.CompanyName, request.WorkpointName, request.TotalPrice, request.Status);
+            return new BillsDTO(request.OrderNo, DateTime.Now, request.CreatedBy, request.WorkPointId, request.TotalPrice, request.Status, request.Products);
 
         }
     }

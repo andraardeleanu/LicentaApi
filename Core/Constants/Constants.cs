@@ -19,7 +19,7 @@ namespace Core.Constants
             public const string CREATED_BY = "«CreatedBy»";
             public const string PDF_FILE_CONTENT_TYPE = "application/pdf";
             public const string PDF_EXTENSION_TYPE = ".pdf";
-            public const string BILL_FILE_NAME = "Factura comanda";
+            public const string BILL_FILE_NAME = "Factura comanda.pdf";
         }
     }
 }

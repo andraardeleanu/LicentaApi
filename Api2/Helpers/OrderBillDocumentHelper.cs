@@ -5,6 +5,7 @@ using DocumentFormat.OpenXml;
 using Api2.ApiModels;
 using static Core.Constants.Constants;
 using Core.Constants;
+using AutoMapper.Internal.Mappers;
 
 namespace Api2.Helpers
 {
@@ -44,12 +45,11 @@ namespace Api2.Helpers
 
         private void ReplaceOrderBillPlaceholders(WordprocessingDocument doc, BillsDTO billsDTO)
         {
-            _documentHelper.ReplacePlaceholder(doc.MainDocumentPart!, OrderBillInformation.TOTAL_PRICE, billsDTO.TotalPrice.ToString());
             _documentHelper.ReplacePlaceholder(doc.MainDocumentPart!, OrderBillInformation.ORDER_NO, billsDTO.OrderNo!);
-            _documentHelper.ReplacePlaceholder(doc.MainDocumentPart!, OrderBillInformation.COMPANY, billsDTO.CompanyName!);
-            _documentHelper.ReplacePlaceholder(doc.MainDocumentPart!, OrderBillInformation.WORKPOINT, billsDTO.WorkpointName!);
-            _documentHelper.ReplacePlaceholder(doc.MainDocumentPart!, OrderBillInformation.STATUS, billsDTO.Status!);
             _documentHelper.ReplacePlaceholder(doc.MainDocumentPart!, OrderBillInformation.CREATED_BY, billsDTO.CreatedBy!);
+            _documentHelper.ReplacePlaceholder(doc.MainDocumentPart!, OrderBillInformation.WORKPOINT, billsDTO.WorkpointId.ToString()!);
+            _documentHelper.ReplacePlaceholder(doc.MainDocumentPart!, OrderBillInformation.TOTAL_PRICE, billsDTO.TotalPrice.ToString());                        
+            _documentHelper.ReplacePlaceholder(doc.MainDocumentPart!, OrderBillInformation.STATUS, billsDTO.Status!);            
             _documentHelper.ReplacePlaceholder(doc.MainDocumentPart!, OrderBillInformation.DATE, billsDTO.Date!.ToString());
         }
     }

@@ -5,6 +5,7 @@
         Task<(byte[], string)> ConvertAsync(IFormFile file);
         Task<(byte[], string)> ConvertAsync(byte[] fileBytes);
         Task<(MemoryStream, string)> ConvertAsync(MemoryStream fileStream);
+        Task<MemoryStream> ConvertToPdfAsync(MemoryStream fileStream);
     }
 
 }

@@ -28,29 +28,27 @@ namespace Api2.Controllers
             _userManager = userManager;
         }
 
-        [HttpPost("/billGenerator")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Result<GenericFileResponse>))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> GenerateOrderBill([FromBody] BillRequest request)
+        [HttpPost("billGenerator")]
+        public async Task<GenericFileResponse> GenerateOrderBill([FromBody] BillRequest request)
         {
             var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var user = await _userManager.FindByNameAsync(username);
 
-            var billDto = request.ToBillDTOEntity(user.Id);
+            var billDto = request.ToBillDTOEntity();
 
             var resultDto = await _billGeneratorService.GenerateOrderBillDocument(billDto);
             
-            if (resultDto is null) return BadRequest(ErrorMessages.PdfGenerationFailed);
+            //if (resultDto is null) return BadRequest(ErrorMessages.PdfGenerationFailed);
 
             var resp = new GenericFileResponse()
             {
                 File = resultDto
             };
-           
-           // var billEntity = request.ToBillEntity(user.Id, username);
+
+            // var billEntity = request.ToBillEntity(user.Id, username);
             //var bill = await _billService.AddAsync(billEntity);
 
-            return Ok(new Result<GenericFileResponse>(resp));
+            return resp;
         }
     }
 }

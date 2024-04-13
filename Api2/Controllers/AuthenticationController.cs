@@ -40,7 +40,7 @@ namespace Api2.Controllers
             var userRoles = await _userManager.GetRolesAsync(user);
             var userCompanies = await _companyService.WhereAsync(c => c.Id == user.CompanyId);
 
-            return new JsonResult(new UserDTO(user.Id, user.FirstName, user.LastName, userCompanies, user.UserName, userRoles));
+            return new JsonResult(new UserDTO(user.Id, user.FirstName, user.LastName, userCompanies, user.UserName, userRoles, user.Email));
         }
 
         [HttpGet]
@@ -55,7 +55,7 @@ namespace Api2.Controllers
             var userRoles = await _userManager.GetRolesAsync(user);
             var userCompanies = await _companyService.WhereAsync(c => c.CreatedBy == user.Id);
 
-            return new JsonResult(new UserDTO(user.Id, user.FirstName, user.LastName, userCompanies, user.UserName, userRoles));
+            return new JsonResult(new UserDTO(user.Id, user.FirstName, user.LastName, userCompanies, user.UserName, userRoles, user.Email));
         }
 
         [HttpPost]
@@ -212,12 +212,46 @@ namespace Api2.Controllers
 
                 var userCompanies = await _companyService.WhereAsync(c => c.CreatedBy == user.Id);
 
-                var userEntity = new UserDTO(user.Id, user.FirstName, user.LastName, userCompanies, user.UserName, userRoles);
+                var userEntity = new UserDTO(user.Id, user.FirstName, user.LastName, userCompanies, user.UserName, userRoles, user.Email);
 
                 resList.Add(userEntity);
             }
 
             return new JsonResult(resList);
+        }
+
+        [HttpPost]
+        //[Authorize]
+        [Route("updateCustomer")]
+        public async Task<IActionResult> UpdateCustomerAsync([FromBody] UpdateCustomerRequest customerRequest)
+        {
+            var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var user = await _userManager.FindByNameAsync(username);
+            var customer = await _userManager.FindByIdAsync(customerRequest.Id);
+
+            if (string.IsNullOrWhiteSpace(customerRequest.Firstname) || string.IsNullOrWhiteSpace(customerRequest.Lastname)
+                || string.IsNullOrWhiteSpace(customerRequest.Username) || string.IsNullOrWhiteSpace(customerRequest.Email))
+            {
+                return BadRequest(new Result(ErrorMessages.AllFieldsAreMandatory));
+            }
+
+            else
+            {
+                var existingUser = await _userManager.FindByNameAsync(customerRequest.Username);
+                if (existingUser != null) return BadRequest(new Result(ErrorMessages.ExistingUsername));
+
+                else
+                {
+                    customer.FirstName = customerRequest.Firstname;
+                    customer.LastName = customerRequest.Lastname;
+                    customer.UserName = customerRequest.Username;
+                    customer.Email = customerRequest.Email;
+
+                    await _userManager.UpdateAsync(customer);
+
+                    return Ok(new Result());
+                }
+            }
         }
     }
 }

@@ -12,6 +12,9 @@ namespace Core.Constants
         public static readonly string ExistingCui = "Exista deja o companie cu acest Cui.";
         public static readonly string ExistingCompanyName = "Exista deja o companie cu acest nume.";
 
+        public static readonly string ExistingWorkpointName = "Exista deja un punct de lucru cu acest nume.";
+        public static readonly string CannotDeleteWorkpoint = "Nu se pot sterge punctele de lucru pe care exista comenzi.";
+
         public static readonly string InvalidData = "A aparut o eroare.";
 
         public static readonly string ExistingWorkpoint = "Exista deja un punct de lucru cu acest nume si adresa.";
