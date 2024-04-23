@@ -118,6 +118,25 @@ namespace Api2.Controllers
             return new JsonResult(orderDetail.Products.ToList());
         }
 
+        [HttpGet]
+        [Route("getOrderDetailsForBill/{orderId}")]
+        public async Task<IActionResult> GetOrderDetailsForBillAsync(int orderId)
+        {
+            var order = await _orderService.GetByIdAsync(orderId, x => x.OrderProduct);
+            var orderProducts = await _orderProductService.WhereAsync(x => x.OrderId == orderId, y => y.Product);
+
+            var productsWithQuantity = orderProducts.Select(op => new ProductWithQuantity
+            {
+                Name = op.Product.Name,
+                Price = op.Product.Price,
+                Quantity = op.Quantity
+            }).ToList();
+
+            var orderDetail = OrderMapper.ToOrderDetailsDTO(order, productsWithQuantity);
+
+            return new JsonResult(orderDetail);
+        }
+
         [HttpPost]
         // [Authorize]
         [Route("addOrder")]
