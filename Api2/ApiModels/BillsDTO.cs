@@ -1,4 +1,5 @@
 ﻿using Api2.Requests;
+using Core.Entities;
 
 namespace Api2.ApiModels
 {
@@ -11,8 +12,8 @@ namespace Api2.ApiModels
         public int WorkpointId { get; set; }
         public decimal TotalPrice {  get; set; }         
         public string Status { get; set; }
-        public List<ProductDetails> Products { get; set; }
-        public BillsDTO(string orderNo, DateTime date,  string createdBy, int workpointId, decimal totalPrice, string status, List<ProductDetails> products)
+        public virtual List<Product> Products { get; set; }
+        public BillsDTO(string orderNo, DateTime date,  string createdBy, int workpointId, decimal totalPrice, string status, List<Product> products)
         {
             OrderNo = orderNo;
             Date = date;            

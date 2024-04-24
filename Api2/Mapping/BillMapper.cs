@@ -1,10 +1,6 @@
 ﻿using Api2.ApiModels;
 using Api2.Requests;
 using Core.Entities;
-using DocumentFormat.OpenXml.Drawing.Charts;
-using DocumentFormat.OpenXml.Office2010.Excel;
-using Microsoft.AspNetCore.Http.HttpResults;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Api2.Mapping
 {
@@ -14,19 +10,15 @@ namespace Api2.Mapping
         {
             return new Bill()
             {
-                Status = request.Status,
-                OrderNo = request.OrderNo,
-                CreatedBy = request.CreatedBy,
-                Author = user,
-                TotalPrice = request.TotalPrice,
+                CreatedBy = user,                
                 DateCreated = DateTime.Now,
+                Status = request.Status,
+                Products = request.Products,
+                OrderNo = request.OrderNo,
+                TotalPrice = request.TotalPrice,
+                OrderType = request.OrderType,
+                WorkPointId = request.WorkPointId,
             };
-        }
-
-        public static BillsDTO ToBillDTOEntity(this BillRequest request)
-        {
-            return new BillsDTO(request.OrderNo, DateTime.Now, request.CreatedBy, request.WorkPointId, request.TotalPrice, request.Status, request.Products);
-
         }
     }
 }

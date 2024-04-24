@@ -36,6 +36,9 @@ namespace Api2.Controllers
             {
                 companies = companies.FindAll(x => x.Name.Contains(companyFilterRequest.Name));
             }
+
+            companies = companies.OrderByDescending(x => x.DateCreated).ToList();
+
             var dtoList = companies.Select(x => new CompanyDTO(x.Id, x.Name, x.Cui, x.Author, x.DateCreated, x.DateUpdated));
 
             return new JsonResult(dtoList);
@@ -72,7 +75,8 @@ namespace Api2.Controllers
             if (string.IsNullOrWhiteSpace(companyRequest.Name) || string.IsNullOrWhiteSpace(companyRequest.Cui))
             {
                 return BadRequest(new Result(ErrorMessages.AllFieldsAreMandatory));
-            } else
+            }
+            else
             {
                 var existingCompany = await _companyService.WhereAsync(x => x.Name == companyRequest.Name);
                 if (existingCompany != null && existingCompany.Any())
@@ -85,7 +89,7 @@ namespace Api2.Controllers
                     var company = await _companyService.AddAsync(companyEntity);
                     return Ok(new Result());
                 }
-            }                   
+            }
         }
 
         [HttpPost]

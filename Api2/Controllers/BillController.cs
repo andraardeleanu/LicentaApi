@@ -6,9 +6,9 @@ using Api2.Services.Interfaces;
 using AutoMapper;
 using Core.Constants;
 using Core.Entities;
+using Core.Models;
 using Core.Services.Interfaces;
 using Infra.Data.Auth;
-using LanguageExt.Common;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -28,27 +28,38 @@ namespace Api2.Controllers
             _userManager = userManager;
         }
 
-        [HttpPost("billGenerator")]
-        public async Task<GenericFileResponse> GenerateOrderBill([FromBody] BillRequest request)
+        [HttpPost]
+        [Route("billGenerator")]
+        public async Task<IActionResult> GenerateOrderBill([FromBody] BillRequest request)
         {
             var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var user = await _userManager.FindByNameAsync(username);
+            var user = await _userManager.FindByNameAsync(username);                       
 
-            var billDto = request.ToBillDTOEntity();
-
-            var resultDto = await _billGeneratorService.GenerateOrderBillDocument(billDto);
-            
-            //if (resultDto is null) return BadRequest(ErrorMessages.PdfGenerationFailed);
-
-            var resp = new GenericFileResponse()
+            if(request != null)
             {
-                File = resultDto
-            };
+                var billEntity = request.ToBillEntity(user.Id);
+                await _billService.AddAsync(billEntity);
 
-            // var billEntity = request.ToBillEntity(user.Id, username);
-            //var bill = await _billService.AddAsync(billEntity);
+                return Ok(new Result());
+            }
+            else
+            {
+                return BadRequest(new Result(ErrorMessages.InvalidData));
+            }
+        }
 
-            return resp;
+        [HttpGet]
+        //[Authorize]
+        [Route("getBills")]
+        public async Task<IActionResult> GetBillsAsync()
+        {
+            var bills = await _billService.ListAsync();
+
+            bills = bills.OrderByDescending(x => x.DateCreated).ToList();
+
+            var dtoList = bills.Select(x => new BillsDTO(x.OrderNo, x.DateCreated, x.CreatedBy, x.WorkPointId, x.TotalPrice, x.Status, x.Products));
+
+            return new JsonResult(dtoList);
         }
     }
 }
