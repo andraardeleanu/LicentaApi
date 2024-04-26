@@ -13,6 +13,8 @@ using Infra.Data.Auth;
 using Core.Constants;
 using Microsoft.IdentityModel.Tokens;
 using Core.Models;
+using System.Text.Json;
+using LanguageExt.ClassInstances;
 
 namespace Api2.Controllers
 {
@@ -20,17 +22,20 @@ namespace Api2.Controllers
     {
         private readonly IGenericService<Order> _orderService;
         private readonly IGenericService<OrderProduct> _orderProductService;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IOrderService _orderServiceTest;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IGenericService<WorkPoint> _workpointService;
 
         public OrderController(IGenericService<Order> orderService,
             IGenericService<OrderProduct> orderProductService,
+            RoleManager<IdentityRole> roleManager,
             IOrderService orderServiceTest,
             UserManager<ApplicationUser> userManager,
             IGenericService<WorkPoint> workpointService)
         {
             _orderService = orderService;
+            _roleManager = roleManager;
             _orderProductService = orderProductService;
             _orderServiceTest = orderServiceTest;
             _userManager = userManager;
@@ -43,6 +48,14 @@ namespace Api2.Controllers
         public async Task<IActionResult> GetOrderAsync([FromQuery] OrderFilterRequest orderRequest)
         {
             var orders = await _orderService.ListAsync();
+            var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var user = await _userManager.FindByNameAsync(username);
+            var role = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
+
+            if (role == "Customer")
+            {
+                orders = orders.FindAll(x => x.CreatedBy == user.Id);
+            }
 
             if (orderRequest.OrderNo != null)
             {
@@ -144,7 +157,7 @@ namespace Api2.Controllers
         {
             try
             {
-                var existingCompany = await _workpointService.GetByIdAsync(orderRequest.WorkPointId);
+                var existingWorkpoint = await _workpointService.GetByIdAsync(orderRequest.WorkPointId);
             }
             catch (Exception ex)
             {
@@ -179,28 +192,23 @@ namespace Api2.Controllers
                 orderRequest.Author = username;
                 orderRequest.CreatedBy = user.Id;
 
-                // Adaugi comanda și obții răspunsul
                 var res = await _orderServiceTest.AddOrderAsync(orderRequest, Enums.OrderType.Manual);
 
-                // Verifici dacă comanda a fost adăugată cu succes
-                if (res.StatusCode == 200)
+                if (res.StatusCode != 500)
                 {
-                    // Actualizezi entitatea comenzii cu prețul total
                     var data = (dynamic)res.Data;
                     var orderTotalPrice = data.TotalPrice;
                     var orderId = data.OrderId;
                     var orderEntity = await _orderService.GetByIdAsync(orderId);
                     orderEntity.TotalPrice = orderTotalPrice;
 
-                    // Salvezi modificările în baza de date
                     await _orderService.UpdateAsync(orderEntity);
 
                     return Ok(new Result());
                 }
                 else
                 {
-                    // În caz de eșec, întorci răspunsul original al metodei AddOrderAsync
-                    return StatusCode(res.StatusCode, res.Data);
+                    return BadRequest(new Result(res.Data.ToString()));
                 }
             }
         }
@@ -209,19 +217,21 @@ namespace Api2.Controllers
         [Route("addOrdersFromFile")]
         public async Task<IActionResult> CreateOrdersFromCsvAsync(IFormFile file, [FromForm] int workPointId)
         {
-            var ext = Path.GetExtension(file.FileName);
-
-            if (ext != ".csv")
+            try
             {
-                return BadRequest(new Result(ErrorMessages.InvalidFileExtension));
+                var existingWorkpoint = await _workpointService.GetByIdAsync(workPointId);
             }
+            catch (Exception ex)
+            {
+                return BadRequest(new Result(ErrorMessages.InvalidWorkpoint));
+            }
+
             if (file == null || file.Length <= 0)
-            {
                 return BadRequest(new Result(ErrorMessages.InvalidFile));
-            }
 
-            var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "admin";
-            var user = await _userManager.FindByNameAsync(username);
+            var ext = Path.GetExtension(file.FileName);
+            if (ext != ".csv")
+                return BadRequest(new Result(ErrorMessages.InvalidFileExtension));
 
             try
             {
@@ -250,7 +260,12 @@ namespace Api2.Controllers
                                 encounteredProductIds.Add(productId);
                             }
                         }
+                        else
+                            return BadRequest(new Result(ErrorMessages.FileFormatError));
                     }
+
+                    var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "admin";
+                    var user = await _userManager.FindByNameAsync(username);
 
                     if (products.Count > 0)
                     {
@@ -263,14 +278,27 @@ namespace Api2.Controllers
                             Products = products
                         };
 
-                        await _orderServiceTest.AddOrderAsync(order, Enums.OrderType.File);
+                        var orderResponse = await _orderServiceTest.AddOrderAsync(order, Enums.OrderType.File);
 
-                        return Ok(new Result());
+                        if (orderResponse.StatusCode == 500)
+                        {
+                            var orderRespMessage = orderResponse.Data.ToString();
+                            return BadRequest(new Result(orderRespMessage));
+                        }
+                        else
+                        {
+                            var data = (dynamic)orderResponse.Data;
+                            var orderTotalPrice = data.TotalPrice;
+                            var orderId = data.OrderId;
+                            var orderEntity = await _orderService.GetByIdAsync(orderId);
+                            orderEntity.TotalPrice = orderTotalPrice;
+
+                            await _orderService.UpdateAsync(orderEntity);
+                            return Ok(new Result());
+                        }
                     }
                     else
-                    {
                         return BadRequest(new Result(ErrorMessages.EmptyProductList));
-                    }
                 }
             }
             catch (Exception ex)

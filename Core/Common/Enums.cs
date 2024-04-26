@@ -12,6 +12,7 @@
         {
             Initialized = 1,
             Processed = 2,
+            Billed = 3,
         }
 
         public enum ResponseStatus

@@ -4,6 +4,7 @@ using Api2.Requests;
 using Api2.Responses;
 using Api2.Services.Interfaces;
 using AutoMapper;
+using Core.Common;
 using Core.Constants;
 using Core.Entities;
 using Core.Models;
@@ -18,12 +19,12 @@ namespace Api2.Controllers
     public class BillController : ControllerBase
     {
         private readonly IGenericService<Bill> _billService;
-        private readonly IBillGeneratorService _billGeneratorService;
+        private readonly IGenericService<Order> _orderService;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public BillController(IBillGeneratorService billGeneratorService, IGenericService<Bill> billService, UserManager<ApplicationUser> userManager)
+        public BillController(IGenericService<Order> orderService, IGenericService<Bill> billService, UserManager<ApplicationUser> userManager)
         {
-            _billGeneratorService = billGeneratorService ?? throw new ArgumentNullException(nameof(billGeneratorService));
+            _orderService = orderService;
             _billService = billService;
             _userManager = userManager;
         }
@@ -33,12 +34,30 @@ namespace Api2.Controllers
         public async Task<IActionResult> GenerateOrderBill([FromBody] BillRequest request)
         {
             var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var user = await _userManager.FindByNameAsync(username);                       
+            var user = await _userManager.FindByNameAsync(username);
+            
+            if (request.Status == Enums.OrderStatus.Initialized.ToString())
+            {
+                return BadRequest(new Result(ErrorMessages.OrderStatusBillError));
+            }
 
-            if(request != null)
+            var existingBill = await _billService.WhereAsync(x => x.OrderNo == request.OrderNo);
+            if (existingBill != null && existingBill.Any())
+            {
+                return BadRequest(new Result(ErrorMessages.BillInsertionError));
+            }
+            
+            if (request != null)
             {
                 var billEntity = request.ToBillEntity(user.Id);
                 await _billService.AddAsync(billEntity);
+               
+                var billedOrder = (await _orderService.WhereAsync(x => x.OrderNo.ToString() == request.OrderNo)).FirstOrDefault();
+
+                billedOrder.Status = Enums.OrderStatus.Billed.ToString();
+                billedOrder.DateUpdated = DateTime.UtcNow;
+
+                await _orderService.UpdateAsync(billedOrder);
 
                 return Ok(new Result());
             }

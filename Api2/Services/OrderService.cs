@@ -8,6 +8,9 @@ using System.Linq;
 using Core.Common;
 using DocumentFormat.OpenXml.Drawing;
 using System.Runtime.CompilerServices;
+using Core.Constants;
+using Core.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Api2.Services
 {
@@ -58,11 +61,6 @@ namespace Api2.Services
 
         private async Task<Stock?> CheckForStockStock(ProductDetails product)
         {
-            var productResult = await _productService.GetByIdAsync(product.ProductId);
-
-            if (productResult == null)
-                return null;
-
             var stocks = await _productStockService.WhereAsync(x => x.ProductId == product.ProductId);
 
             if (stocks.Count == 0)
@@ -101,13 +99,27 @@ namespace Api2.Services
             }
             else
             {
-                throw new Exception("Product not found or price not available.");
+                throw new Exception(ErrorMessages.ProductNotFound);
+            }
+        }
+
+        private async Task<bool> GetProductById(int productId)
+        {
+            var product = await _productService.WhereAsync(x => x.Id == productId);
+            if (product != null && product.Any())
+            {
+                return true;
+            }
+            else
+            {
+                return false;
             }
         }
 
         public async Task<GenericResponse<object>> AddOrderAsync(OrderRequest orderRequest, Enums.OrderType orderType)
         {
             var response = new GenericResponse<object>();
+            var errors = new List<string>();
             try
             {
                 var orderEntity = OrderMapper.ToOrderEntityCreate(orderRequest, orderRequest.Author);
@@ -116,36 +128,51 @@ namespace Api2.Services
                 {
                     List<int> orderProductIds = new List<int>();
                     List<int> productIds = new List<int>();
-
-                    decimal totalPrice = 0; // Inițializează prețul total cu 0
-
+                    decimal totalPrice = 0;
                     foreach (var product in orderRequest.Products)
                     {
+                        if (await GetProductById(product.ProductId) == false)
+                        {
+                            errors.Add(ErrorMessages.ProductNotFound);
+                            continue;
+                        }
                         var stock = await CheckForStockStock(product);
                         if (stock == null)
-                            break;
-
+                        {
+                            errors.Add(ErrorMessages.AvailableStockError);
+                            continue;
+                        }
                         var updateStockResponse = await UpdateStock(product, stock);
                         if (!updateStockResponse)
-                            break;
-
+                        {
+                            errors.Add(ErrorMessages.InvalidData);
+                            continue;
+                        }
                         productIds.Add(product.ProductId);
-
-                        var orderProductEntity = new OrderProduct() { ProductId = product.ProductId, Quantity = product.Quantity, OrderId = order.Id };
+                        var orderProductEntity = new OrderProduct()
+                        {
+                            ProductId = product.ProductId,
+                            Quantity = product.Quantity,
+                            OrderId = order.Id
+                        };
                         var orderProductResult = await _orderProductService.AddAsync(orderProductEntity);
                         if (orderProductResult == null)
-                            break;
-
+                        {
+                            errors.Add(ErrorMessages.InvalidData);
+                            continue;
+                        }
                         orderProductIds.Add(orderProductResult.Id);
-
-                        // Aici adaugi prețul produsului la prețul total al comenzii
-                        var productPrice = await GetProductPrice(product.ProductId); // presupunând că există o metodă pentru a obține prețul produsului
+                        var productPrice = await GetProductPrice(product.ProductId);
                         totalPrice += productPrice * product.Quantity;
                     }
                     if (orderProductIds.Count == orderRequest.Products.Count && orderRequest.Products.Count == orderProductIds.Count)
                     {
                         response.StatusCode = 200;
-                        response.Data = new { OrderId = order.Id, TotalPrice = totalPrice }; // Întoarce și prețul total al comenzii
+                        response.Data = new
+                        {
+                            OrderId = order.Id,
+                            TotalPrice = totalPrice
+                        };
                         return response;
                     }
                     else
@@ -153,22 +180,24 @@ namespace Api2.Services
                         await RevertStock(productIds, orderRequest.Products);
                         await RevertOrderProduct(orderProductIds);
                         await _orderService.DeleteAsync(order);
-                        response.StatusCode = 500;
-                        response.Data = new { ErrorMessage = "let's see" };
-                        return response;
+                        errors.Add(ErrorMessages.DuplicatedProduct);
                     }
                 }
-                response.StatusCode = 500;
-                response.Data = new { ErrorMessage = "Unable to insert order" };
                 return response;
             }
             catch (Exception ex)
             {
-                response.StatusCode = 500;
-                response.Data = new { ErrorMessage = ex };
-                return response;
+                errors.Add(ex.Message);
             }
+            finally
+            {
+                if (errors.Any())
+                {
+                    response.StatusCode = 500;
+                    response.Data = errors.FirstOrDefault();
+                }
+            }
+            return response;
         }
     }
 }
-

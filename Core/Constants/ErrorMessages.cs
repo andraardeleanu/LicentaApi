@@ -17,13 +17,20 @@ namespace Core.Constants
 
         public static readonly string InvalidData = "A aparut o eroare.";
 
+        public static readonly string OrderStatusBillError = "Facturile se pot genera doar pentru comenzile in status Procesata.";
+        public static readonly string BillInsertionError = "Aceasta factura a fost deja generata.";
+
         public static readonly string ExistingWorkpoint = "Exista deja un punct de lucru cu acest nume si adresa.";
         public static readonly string MandatoryField = "Campul este obligatoriu.";
        
-        public static readonly string DuplicatedProduct = "Au fost identificate produse duplicate. Te rog sa revizuiesti comanda";
+        public static readonly string DuplicatedProduct = "Au fost identificate produse duplicate. Te rog sa revizuiesti comanda.";
         public static readonly string EmptyProductList = "Nu ai selectat niciun produs pentru comanda.";
         public static readonly string InvalidQuantity = "Cantitatea setata pentru unul sau mai multe produse este invalida.";
         public static readonly string OrderStatusError = "Statusul comenzilor procesate nu mai poate fi modificat.";
+        public static readonly string FileFormatError = "Formatul fisierului este invalid.";
+        public static readonly string AvailableStockError = "Verifica stocul disponibil pentru produsele din comanda.";
+        public static readonly string ProductNotFound = "Produs invalid.";
+        public static readonly string UpdateStockError = "A aparut o eroare la actualizarea stocului.";
 
         public static readonly string ExistingProduct = "Exista deja un produs cu acest nume.";
         public static readonly string InvalidStock = "Nu se poate adauga un stoc mai mic sau egal cu 0.";
