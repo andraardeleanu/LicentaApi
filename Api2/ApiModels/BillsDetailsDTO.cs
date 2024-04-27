@@ -1,15 +1,14 @@
-﻿using Core.Common;
+﻿using Core.Entities;
 
-namespace Core.Entities
+namespace Api2.ApiModels
 {
-    public class Bill : BaseEntity
+    public class BillsDetailsDTO
     {
-        public int Id { get; set; }
-        public string CreatedBy { get; set; }
         public Guid OrderNo { get; set; }
         public string WorkpointName { get; set; }
         public string CompanyName { get; set; }
         public decimal TotalPrice { get; set; }
         public string Status { get; set; }
+        public List<ProductWithQuantity> Products;
     }
 }

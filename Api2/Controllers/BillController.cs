@@ -12,6 +12,7 @@ using Core.Services.Interfaces;
 using Infra.Data.Auth;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 using System.Security.Claims;
 
 namespace Api2.Controllers
@@ -20,12 +21,23 @@ namespace Api2.Controllers
     {
         private readonly IGenericService<Bill> _billService;
         private readonly IGenericService<Order> _orderService;
+        private readonly IGenericService<OrderProduct> _orderProductService;
+        private readonly IGenericService<WorkPoint> _workpointService;
+        private readonly IGenericService<Company> _companyService;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public BillController(IGenericService<Order> orderService, IGenericService<Bill> billService, UserManager<ApplicationUser> userManager)
+        public BillController(IGenericService<Order> orderService,
+            IGenericService<Bill> billService,
+            IGenericService<OrderProduct> orderProductService,
+            IGenericService<WorkPoint> workpointService,
+            IGenericService<Company> companyService,
+            UserManager<ApplicationUser> userManager)
         {
             _orderService = orderService;
             _billService = billService;
+            _orderProductService = orderProductService;
+            _workpointService = workpointService;
+            _companyService = companyService;
             _userManager = userManager;
         }
 
@@ -35,8 +47,12 @@ namespace Api2.Controllers
         {
             var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var user = await _userManager.FindByNameAsync(username);
-            
-            if (request.Status == Enums.OrderStatus.Initialized.ToString())
+
+            var billedOrder = (await _orderService.WhereAsync(x => x.OrderNo == request.OrderNo)).FirstOrDefault();
+            var orderWorkpoint = await _workpointService.GetByIdAsync(billedOrder.WorkPointId);
+            var workpointCompany = (await _companyService.WhereAsync(x => x.Id == orderWorkpoint.CompanyId)).FirstOrDefault();
+
+            if (request.Status == Enums.OrderStatus.Initializata.ToString())
             {
                 return BadRequest(new Result(ErrorMessages.OrderStatusBillError));
             }
@@ -46,15 +62,17 @@ namespace Api2.Controllers
             {
                 return BadRequest(new Result(ErrorMessages.BillInsertionError));
             }
-            
+
             if (request != null)
             {
-                var billEntity = request.ToBillEntity(user.Id);
-                await _billService.AddAsync(billEntity);
-               
-                var billedOrder = (await _orderService.WhereAsync(x => x.OrderNo.ToString() == request.OrderNo)).FirstOrDefault();
+                request.CreatedBy = user.Id;
+                request.WorkpointName = orderWorkpoint.Name;
+                request.CompanyName = workpointCompany.Name;
 
-                billedOrder.Status = Enums.OrderStatus.Billed.ToString();
+                var billEntity = request.ToBillEntity(username);
+                await _billService.AddAsync(billEntity);
+
+                billedOrder.Status = Enums.OrderStatus.Facturata.ToString();
                 billedOrder.DateUpdated = DateTime.UtcNow;
 
                 await _orderService.UpdateAsync(billedOrder);
@@ -74,11 +92,46 @@ namespace Api2.Controllers
         {
             var bills = await _billService.ListAsync();
 
+            var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var user = await _userManager.FindByNameAsync(username);
+            var role = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
+
+            if (role == "Customer")
+            {
+                bills = bills.FindAll(x => x.CreatedBy == user.Id);
+            }
+
             bills = bills.OrderByDescending(x => x.DateCreated).ToList();
 
-            var dtoList = bills.Select(x => new BillsDTO(x.OrderNo, x.DateCreated, x.CreatedBy, x.WorkPointId, x.TotalPrice, x.Status, x.Products));
+            var dtoList = bills.Select(x => new BillsDTO(x.Author, x.DateCreated, x.OrderNo, x.WorkpointName, x.CompanyName, x.TotalPrice, x.Status));
 
             return new JsonResult(dtoList);
+        }
+
+        [HttpGet]
+        //[Authorize]
+        [Route("getBillDetails/{orderId}")]
+        public async Task<IActionResult> GetBillDetailsAsync(int orderId)
+        {
+            var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            var order = await _orderService.GetByIdAsync(orderId);
+            var orderWorkpoint = await _workpointService.GetByIdAsync(order.WorkPointId);
+            var workpointCompany = (await _companyService.WhereAsync(x => x.Id == orderWorkpoint.CompanyId)).FirstOrDefault();
+            var orderProducts = await _orderProductService.WhereAsync(x => x.OrderId == orderId, y => y.Product);
+
+            List<ProductWithQuantity> productsWithQuantity = new List<ProductWithQuantity>();
+            productsWithQuantity = orderProducts.Select(op => new ProductWithQuantity
+            {
+                Name = op.Product.Name,
+                Price = op.Product.Price,
+                Quantity = op.Quantity
+            }).ToList();
+
+            var billDetails = BillMapper.ToBillDetailsDTO(order, orderWorkpoint.Name, workpointCompany.Name, productsWithQuantity);
+
+
+            return new JsonResult(billDetails);
         }
     }
 }

@@ -68,6 +68,9 @@ namespace Api2.Services
 
             var stock = stocks.ElementAt(0);
 
+            if (product.Quantity <= 0)
+                return null;
+
             if (stock.AvailableStock < product.Quantity)
                 return null;
 

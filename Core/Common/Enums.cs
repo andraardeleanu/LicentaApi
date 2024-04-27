@@ -10,9 +10,9 @@
 
         public enum OrderStatus
         {
-            Initialized = 1,
-            Processed = 2,
-            Billed = 3,
+            Initializata = 1,
+            Procesata = 2,
+            Facturata = 3,
         }
 
         public enum ResponseStatus

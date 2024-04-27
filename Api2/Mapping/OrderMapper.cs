@@ -7,28 +7,29 @@ namespace Api2.Mapping
 {
     public static class OrderMapper
     {
-        public static Order ToOrderEntityCreate(this OrderRequest request,string user)
+        public static Order ToOrderEntityCreate(this OrderRequest request, string user)
         {
             return new Order()
             {
-                Date = DateTime.Now,
                 Author = user,
-                CreatedBy=request.CreatedBy,
+                CreatedBy = request.CreatedBy,
                 OrderNo = Guid.NewGuid(),
-                Status= OrderStatus.Initialized.ToString(),
-                WorkPointId=request.WorkPointId
+                Status = OrderStatus.Initializata.ToString(),
+                WorkPointId = request.WorkPointId,
+                TotalPrice = request.TotalPrice
             };
         }
 
-        public static OrderDetailsDTO ToOrderDetailsDTO(Order order, List<ProductWithQuantity> products)
+        public static OrderDetailsDTO ToOrderDetailsDTO(Order order, DateTime dateCreated, List<ProductWithQuantity> products)
         {
             return new OrderDetailsDTO()
             {
                 Id = order.Id,
                 OrderNo = order.OrderNo,
-                Date = order.Date,
+                DateCreated = dateCreated,
                 OrderType = order.OrderType,
                 WorkPointId = order.WorkPointId,
+                TotalPrice = order.TotalPrice,
                 Status = order.Status,
                 Products = products
             };

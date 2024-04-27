@@ -4,6 +4,7 @@ using Core.Constants;
 using Core.Entities;
 using Core.Models;
 using Core.Services.Interfaces;
+using DocumentFormat.OpenXml.Drawing.Diagrams;
 using DocumentFormat.OpenXml.Office2010.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,7 +26,7 @@ namespace Api2.Controllers
         [HttpGet]
         //[Authorize]
         [Route("getStocks")]
-        public async Task<IActionResult> GetStocksAsync()
+        public async Task<IActionResult> GetStocksAsync([FromQuery] NameFilterRequest productFilterRequest)
         {
             var stocks = await _stockService.ListAsync();
             var resList = new List<StockDTO>();
@@ -38,8 +39,15 @@ namespace Api2.Controllers
                 {
                     var stockEntity = new StockDTO(stock.Id, stock.ProductId, sp.Name, stock.AvailableStock, stock.PendingStock);
                     resList.Add(stockEntity);
-                }                              
+                }
             }
+
+            if (productFilterRequest.Name != null)
+            {
+
+                resList = resList.FindAll(x => x.ProductName.Contains(productFilterRequest.Name));
+            }
+
             return new JsonResult(resList);
         }
 
@@ -74,7 +82,7 @@ namespace Api2.Controllers
             {
                 return BadRequest(new Result(ErrorMessages.InvalidStock));
             }
-            
+
             try
             {
                 var stock = await _stockService.GetByIdAsync(updateStockRequest.StockId);
@@ -87,10 +95,11 @@ namespace Api2.Controllers
                 var entityResult = await _stockService.GetByIdAsync(updateStockRequest.StockId);
                 return new JsonResult(entityResult);
 
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 return BadRequest(new Result(ErrorMessages.InvalidData));
-            }            
+            }
         }
     }
 

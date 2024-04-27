@@ -57,6 +57,11 @@ namespace Api2.Controllers
                 orders = orders.FindAll(x => x.CreatedBy == user.Id);
             }
 
+            if (orderRequest.Id != null)
+            {
+                orders = orders.FindAll(x => x.Id == orderRequest.Id);
+            }
+
             if (orderRequest.OrderNo != null)
             {
                 orders = orders.FindAll(order => order.OrderNo.ToString().Contains(orderRequest.OrderNo.ToString()!));
@@ -72,19 +77,11 @@ namespace Api2.Controllers
                 orders = orders.FindAll(order => order.Status.ToString().Contains(orderRequest.Status.ToString()!));
             }
 
-            var dtoList = orders.Select(x => new OrderDTO(x.Id, x.OrderNo, x.Date, x.WorkPointId, x.Status));
+            var dtoList = orders.Select(x => new OrderDTO(x.Id, x.OrderNo, x.Author, x.DateCreated, x.WorkPointId, x.TotalPrice, x.Status));
+
+            dtoList = dtoList.OrderByDescending(x => x.DateCreated).ToList();
 
             return new JsonResult(dtoList);
-        }
-
-        [HttpGet]
-        [Authorize]
-        [Route("getOrdersByUserId/{id}")]
-        public async Task<IActionResult> GetOrdersFromUser([FromRoute] string id)
-        {
-            var userOrders = await _orderService.WhereAsync(x => x.CreatedBy == id);
-
-            return Ok(userOrders);
         }
 
         [HttpPost]
@@ -96,9 +93,9 @@ namespace Api2.Controllers
             {
                 var order = await _orderService.GetByIdAsync(orderId);
 
-                if (order.Status == Enums.OrderStatus.Processed.ToString()) return BadRequest(new Result(ErrorMessages.OrderStatusError));
+                if (order.Status == Enums.OrderStatus.Procesata.ToString()) return BadRequest(new Result(ErrorMessages.OrderStatusError));
 
-                order.Status = Enums.OrderStatus.Processed.ToString();
+                order.Status = Enums.OrderStatus.Procesata.ToString();
                 order.DateUpdated = DateTime.UtcNow;
 
                 await _orderService.UpdateAsync(order);
@@ -126,7 +123,7 @@ namespace Api2.Controllers
                 Quantity = op.Quantity
             }).ToList();
 
-            var orderDetail = OrderMapper.ToOrderDetailsDTO(order, productsWithQuantity);
+            var orderDetail = OrderMapper.ToOrderDetailsDTO(order,order.DateCreated, productsWithQuantity);
 
             return new JsonResult(orderDetail.Products.ToList());
         }
@@ -145,7 +142,7 @@ namespace Api2.Controllers
                 Quantity = op.Quantity
             }).ToList();
 
-            var orderDetail = OrderMapper.ToOrderDetailsDTO(order, productsWithQuantity);
+            var orderDetail = OrderMapper.ToOrderDetailsDTO(order, order.DateCreated, productsWithQuantity);
 
             return new JsonResult(orderDetail);
         }

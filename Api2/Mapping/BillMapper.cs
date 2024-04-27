@@ -10,14 +10,26 @@ namespace Api2.Mapping
         {
             return new Bill()
             {
-                CreatedBy = user,                
-                DateCreated = DateTime.Now,
-                Status = request.Status,
-                Products = request.Products,
+                Author = user, 
+                CreatedBy = request.CreatedBy,
                 OrderNo = request.OrderNo,
+                Status = request.Status,
                 TotalPrice = request.TotalPrice,
-                OrderType = request.OrderType,
-                WorkPointId = request.WorkPointId,
+                WorkpointName = request.WorkpointName,
+                CompanyName = request.CompanyName,                                                             
+            };
+        }
+
+        public static BillsDetailsDTO ToBillDetailsDTO(Order order, string orderWorkpoint, string workpointCompany, List<ProductWithQuantity> products)
+        {
+            return new BillsDetailsDTO()
+            {
+                OrderNo = order.OrderNo,
+                WorkpointName = orderWorkpoint,
+                CompanyName = workpointCompany,
+                TotalPrice = order.TotalPrice,
+                Status = order.Status,
+                Products = products
             };
         }
     }

@@ -5,12 +5,12 @@ namespace Api2.Requests
 {
     public class BillRequest
     {
-        public string OrderNo { get; set; }
         public string CreatedBy { get; set; }
+        public Guid OrderNo { get; set; }
         public string Status { get; set; }
         public decimal TotalPrice { get; set; }
-        public Enums.OrderType OrderType { get; set; } 
-        public int WorkPointId { get; set; }
+        public string WorkpointName { get; set; }
+        public string CompanyName { get; set; }
         public virtual List<Product> Products { get; set; }
     }
 }

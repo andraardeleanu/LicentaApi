@@ -5,23 +5,22 @@ namespace Api2.ApiModels
 {
     public class BillsDTO
     {
-        public string Id { get; set; }
-        public DateTime Date { get; set; }
-        public string OrderNo { get; set; }
-        public string CreatedBy { get; set; }       
-        public int WorkpointId { get; set; }
+        public string Author { get; set; }
+        public DateTime DateCreated { get; set; }
+        public Guid OrderNo { get; set; } 
+        public string WorkpointName{ get; set; }
+        public string CompanyName { get; set; }
         public decimal TotalPrice {  get; set; }         
         public string Status { get; set; }
-        public virtual List<Product> Products { get; set; }
-        public BillsDTO(string orderNo, DateTime date,  string createdBy, int workpointId, decimal totalPrice, string status, List<Product> products)
+        public BillsDTO(string author, DateTime dateCreated, Guid orderNo,string workpointName, string companyName, decimal totalPrice, string status)
         {
+            Author = author;
+            DateCreated = dateCreated;
             OrderNo = orderNo;
-            Date = date;            
-            CreatedBy = createdBy;
-            WorkpointId = workpointId;
+            WorkpointName = workpointName;
             TotalPrice = totalPrice;
             Status = status;
-            Products = products;
+            CompanyName = companyName;
         }
     }
 }
