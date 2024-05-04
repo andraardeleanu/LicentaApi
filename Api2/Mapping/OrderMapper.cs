@@ -26,7 +26,6 @@ namespace Api2.Mapping
             {
                 Id = order.Id,
                 OrderNo = order.OrderNo,
-                OrderType = order.OrderType,
                 WorkPointId = order.WorkPointId,
                 TotalPrice = order.TotalPrice,
                 Status = order.Status,

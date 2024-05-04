@@ -128,6 +128,7 @@ namespace Api2.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         [Route("getOrderDetailsForBill")]
         public async Task<IActionResult> GetOrderDetailsForBillAsync([FromQuery] int orderId)
         {

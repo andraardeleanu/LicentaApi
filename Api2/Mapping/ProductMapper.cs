@@ -12,7 +12,6 @@ namespace Api2.Mapping
                 Name = request.Name,
                 Price = request.Price,
                 Author = user,
-                DateCreated = DateTime.Now,
             };
         }
 
