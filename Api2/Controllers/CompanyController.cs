@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using static Core.Common.Enums;
 
 namespace Api2.Controllers
 {
@@ -26,7 +25,7 @@ namespace Api2.Controllers
         }
 
         [HttpGet]
-        //[Authorize]
+        [Authorize]
         [Route("getCompanies")]
         public async Task<IActionResult> GetCompaniesAsync([FromQuery] NameFilterRequest companyFilterRequest)
         {
@@ -46,30 +45,32 @@ namespace Api2.Controllers
 
         [HttpGet]
         [Authorize]
-        [Route("getCompanyById/{id}")]
-        public async Task<IActionResult> GetCompanyAsync(int id)
+        [Route("getCompanyById")]
+        public async Task<IActionResult> GetCompanyAsync([FromQuery] int id)
         {
-            var company = await _companyService.GetByIdAsync(id);
-
-            return new JsonResult(company);
-        }
-
-        [HttpGet]
-        //[Authorize]
-        [Route("getCompanyByName/{name}")]
-        public async Task<IActionResult> GetCompanyByNameAsync(string name)
-        {
-            var company = await _companyService.WhereAsync(x => x.Name.Contains(name));
-
-            return new JsonResult(company);
+            try
+            {
+                var company = await _companyService.GetByIdAsync(id);
+                return new JsonResult(company);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new Result(ErrorMessages.CompanyNotFound));
+            }
         }
 
         [HttpPost]
-        //[Authorize]
+        [Authorize(Roles = "Admin")]
         [Route("addCompany")]
         public async Task<IActionResult> AddCompanyAsync([FromBody] CompanyRequest companyRequest)
         {
             var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (username == null)
+            {
+                return BadRequest(new Result(ErrorMessages.NotAuthorized));
+            }
+
             var user = await _userManager.FindByNameAsync(username);
 
             if (string.IsNullOrWhiteSpace(companyRequest.Name) || string.IsNullOrWhiteSpace(companyRequest.Cui))
@@ -93,12 +94,12 @@ namespace Api2.Controllers
         }
 
         [HttpPost]
-        //[Authorize]
+        [Authorize]
         [Route("updateCompany")]
         public async Task<IActionResult> UpdateCompanyAsync([FromBody] UpdateCompanyRequest companyRequest)
         {
             var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var user = await _userManager.FindByNameAsync(username);
+            var user = await _userManager.FindByNameAsync(username!);
 
             if (string.IsNullOrWhiteSpace(companyRequest.Name))
             {
@@ -126,7 +127,7 @@ namespace Api2.Controllers
         }
 
         [HttpDelete]
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [Route("removeCompany")]
         public async Task<IActionResult> RemoveWorkpointAsync(int id)
         {

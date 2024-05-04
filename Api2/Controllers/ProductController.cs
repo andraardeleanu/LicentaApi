@@ -23,7 +23,7 @@ namespace Api2.Controllers
         }
 
         [HttpGet]
-        //[Authorize]
+        [Authorize]
         [Route("getProducts")]
         public async Task<IActionResult> GetProductAsync([FromQuery] NameFilterRequest productFilterRequest)
         {
@@ -34,13 +34,12 @@ namespace Api2.Controllers
                 products = products.FindAll(x => x.Name.Contains(productFilterRequest.Name));
             }
 
-            var dtoList = products.Select(x => new ProductDTO(x.Id, x.Name, x.Price, x.Author));
-
+            var dtoList = products.Select(x => new ProductDTO(x.Id, x.Name, x.Price));
             return new JsonResult(dtoList);
         }
 
         [HttpPost]
-        //[Authorize]
+        [Authorize(Roles = "Admin")]
         [Route("addProduct")]
         public async Task<IActionResult> AddProductAsync([FromBody] ProductRequest productRequest)
         {
@@ -76,29 +75,44 @@ namespace Api2.Controllers
             };
 
             var stock = await _stockService.AddAsync(stockEntity);
-
             return Ok(new Result());
         }
 
-        [HttpPut]
-        //[Authorize]
+        [HttpPost]
+        [Authorize(Roles = "Admin")]
         [Route("updateProduct")]
         public async Task<IActionResult> UpdateProductAsync([FromBody] ProductDTO productRequest)
         {
-            var product = await _productService.GetByIdAsync(productRequest.Id);
+            try
+            {
+                var product = await _productService.GetByIdAsync(productRequest.Id);
 
-            product.Name = productRequest.Name;
-            product.Price = productRequest.Price;
-            product.DateUpdated = DateTime.UtcNow;
+                var existingProduct = await _productService.WhereAsync(x => x.Name == productRequest.Name);
+                if (existingProduct != null && existingProduct.Any()) return BadRequest(new Result(ErrorMessages.ExistingProduct));
 
-            await _productService.UpdateAsync(product);
+                if (productRequest.Price <= 0)
+                {
+                    return BadRequest(new Result(ErrorMessages.InvalidPrice));
+                }
 
-            var entityResult = await _productService.GetByIdAsync(productRequest.Id);
-            return new JsonResult(entityResult);
+                product.Name = productRequest.Name;
+                product.Price = productRequest.Price;
+                product.DateUpdated = DateTime.UtcNow;
+
+                await _productService.UpdateAsync(product);
+
+                var entityResult = await _productService.GetByIdAsync(productRequest.Id);
+                return new JsonResult(entityResult);
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new Result(ErrorMessages.ProductNotFound));
+            }
         }
 
         [HttpDelete]
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [Route("removeProduct")]
         public async Task<IActionResult> RemoveProductAsync(int id)
         {

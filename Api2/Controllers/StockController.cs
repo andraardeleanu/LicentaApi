@@ -4,8 +4,6 @@ using Core.Constants;
 using Core.Entities;
 using Core.Models;
 using Core.Services.Interfaces;
-using DocumentFormat.OpenXml.Drawing.Diagrams;
-using DocumentFormat.OpenXml.Office2010.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -22,9 +20,8 @@ namespace Api2.Controllers
             _productService = productService;
         }
 
-
         [HttpGet]
-        //[Authorize]
+        [Authorize]
         [Route("getStocks")]
         public async Task<IActionResult> GetStocksAsync([FromQuery] NameFilterRequest productFilterRequest)
         {
@@ -41,41 +38,35 @@ namespace Api2.Controllers
                     resList.Add(stockEntity);
                 }
             }
-
             if (productFilterRequest.Name != null)
             {
-
                 resList = resList.FindAll(x => x.ProductName.Contains(productFilterRequest.Name));
             }
 
             return new JsonResult(resList);
         }
 
-
         [HttpGet]
-        //[Authorize]
-        [Route("getStockById/{id}")]
-        public async Task<IActionResult> GetStockByIdAsync(int id)
+        [Authorize]
+        [Route("getStockById")]
+        public async Task<IActionResult> GetStockByIdAsync([FromQuery] int id)
         {
             var stock = await _stockService.GetByIdAsync(id);
-
             return new JsonResult(stock);
         }
 
         [HttpGet]
-        //[Authorize]
-        [Route("getStockByProductId/{productId}")]
-        public async Task<IActionResult> GetStockByProductIdAsync(int productId)
+        [Authorize]
+        [Route("getStockByProductId")]
+        public async Task<IActionResult> GetStockByProductIdAsync([FromQuery] int productId)
         {
             var productStock = await _stockService.WhereAsync(x => x.ProductId == productId);
-
             return new JsonResult(productStock);
         }
 
-
         [HttpPost]
-        //[Authorize]
-        [Route("updateStock/")]
+        [Authorize(Roles = "Admin")]
+        [Route("updateStock")]
         public async Task<IActionResult> UpdateWorkpointAsync([FromBody] UpdateStockRequest updateStockRequest)
         {
             if (updateStockRequest.AvailableStock <= 0)
@@ -91,10 +82,8 @@ namespace Api2.Controllers
                 stock.DateUpdated = DateTime.UtcNow;
 
                 await _stockService.UpdateAsync(stock);
-
                 var entityResult = await _stockService.GetByIdAsync(updateStockRequest.StockId);
                 return new JsonResult(entityResult);
-
             }
             catch (Exception ex)
             {
@@ -102,5 +91,4 @@ namespace Api2.Controllers
             }
         }
     }
-
 }

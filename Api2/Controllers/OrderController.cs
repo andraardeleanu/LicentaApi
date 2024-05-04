@@ -13,8 +13,6 @@ using Infra.Data.Auth;
 using Core.Constants;
 using Microsoft.IdentityModel.Tokens;
 using Core.Models;
-using System.Text.Json;
-using LanguageExt.ClassInstances;
 
 namespace Api2.Controllers
 {
@@ -43,7 +41,7 @@ namespace Api2.Controllers
         }
 
         [HttpGet]
-        //[Authorize]
+        [Authorize]
         [Route("getOrders")]
         public async Task<IActionResult> GetOrderAsync([FromQuery] OrderFilterRequest orderRequest)
         {
@@ -85,13 +83,13 @@ namespace Api2.Controllers
         }
 
         [HttpPost]
-        //[Authorize]
-        [Route("updateOrderStatus/{orderId}")]
-        public async Task<IActionResult> UpdateOrderStatusAsync(int orderId)
+        [Authorize(Roles = "Admin")]
+        [Route("updateOrderStatus")]
+        public async Task<IActionResult> UpdateOrderStatusAsync([FromBody] RemoveWorkpointRequest request)
         {
             try
             {
-                var order = await _orderService.GetByIdAsync(orderId);
+                var order = await _orderService.GetByIdAsync(request.Id);
 
                 if (order.Status == Enums.OrderStatus.Procesata.ToString()) return BadRequest(new Result(ErrorMessages.OrderStatusError));
 
@@ -110,8 +108,9 @@ namespace Api2.Controllers
         }
 
         [HttpGet]
-        [Route("getOrderDetails/{orderId}")]
-        public async Task<IActionResult> GetOrderDetailsAsync(int orderId)
+        [Authorize]
+        [Route("getOrderDetails")]
+        public async Task<IActionResult> GetOrderDetailsAsync([FromQuery] int orderId)
         {
             var order = await _orderService.GetByIdAsync(orderId, x => x.OrderProduct);
             var orderProducts = await _orderProductService.WhereAsync(x => x.OrderId == orderId, y => y.Product);
@@ -123,14 +122,14 @@ namespace Api2.Controllers
                 Quantity = op.Quantity
             }).ToList();
 
-            var orderDetail = OrderMapper.ToOrderDetailsDTO(order,order.DateCreated, productsWithQuantity);
+            var orderDetail = OrderMapper.ToOrderDetailsDTO(order, productsWithQuantity);
 
             return new JsonResult(orderDetail.Products.ToList());
         }
 
         [HttpGet]
-        [Route("getOrderDetailsForBill/{orderId}")]
-        public async Task<IActionResult> GetOrderDetailsForBillAsync(int orderId)
+        [Route("getOrderDetailsForBill")]
+        public async Task<IActionResult> GetOrderDetailsForBillAsync([FromQuery] int orderId)
         {
             var order = await _orderService.GetByIdAsync(orderId, x => x.OrderProduct);
             var orderProducts = await _orderProductService.WhereAsync(x => x.OrderId == orderId, y => y.Product);
@@ -142,13 +141,13 @@ namespace Api2.Controllers
                 Quantity = op.Quantity
             }).ToList();
 
-            var orderDetail = OrderMapper.ToOrderDetailsDTO(order, order.DateCreated, productsWithQuantity);
+            var orderDetail = OrderMapper.ToOrderDetailsDTO(order, productsWithQuantity);
 
             return new JsonResult(orderDetail);
         }
 
         [HttpPost]
-        // [Authorize]
+        [Authorize]
         [Route("addOrder")]
         public async Task<IActionResult> CreateOrderAsync([FromBody] OrderRequest orderRequest)
         {
@@ -184,10 +183,10 @@ namespace Api2.Controllers
                 }
 
                 var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                var user = await _userManager.FindByNameAsync(username);
+                var user = await _userManager.FindByNameAsync(username!);
 
                 orderRequest.Author = username;
-                orderRequest.CreatedBy = user.Id;
+                orderRequest.CreatedBy = user!.Id;
 
                 var res = await _orderServiceTest.AddOrderAsync(orderRequest, Enums.OrderType.Manual);
 
@@ -205,12 +204,13 @@ namespace Api2.Controllers
                 }
                 else
                 {
-                    return BadRequest(new Result(res.Data.ToString()));
+                    return BadRequest(new Result(res.Data.ToString()!));
                 }
             }
         }
 
         [HttpPost]
+        [Authorize]
         [Route("addOrdersFromFile")]
         public async Task<IActionResult> CreateOrdersFromCsvAsync(IFormFile file, [FromForm] int workPointId)
         {
@@ -237,7 +237,7 @@ namespace Api2.Controllers
                     var products = new List<ProductDetails>();
                     var encounteredProductIds = new HashSet<int>();
                     string line;
-                    while ((line = reader.ReadLine()) != null)
+                    while ((line = reader.ReadLine()!) != null)
                     {
                         var values = line.Split(',');
                         if (values.Length >= 2)
@@ -280,7 +280,7 @@ namespace Api2.Controllers
                         if (orderResponse.StatusCode == 500)
                         {
                             var orderRespMessage = orderResponse.Data.ToString();
-                            return BadRequest(new Result(orderRespMessage));
+                            return BadRequest(new Result(orderRespMessage!));
                         }
                         else
                         {

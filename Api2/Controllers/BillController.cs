@@ -1,18 +1,15 @@
 ﻿using Api2.ApiModels;
 using Api2.Mapping;
 using Api2.Requests;
-using Api2.Responses;
-using Api2.Services.Interfaces;
-using AutoMapper;
 using Core.Common;
 using Core.Constants;
 using Core.Entities;
 using Core.Models;
 using Core.Services.Interfaces;
 using Infra.Data.Auth;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Linq;
 using System.Security.Claims;
 
 namespace Api2.Controllers
@@ -46,10 +43,10 @@ namespace Api2.Controllers
         public async Task<IActionResult> GenerateOrderBill([FromBody] BillRequest request)
         {
             var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var user = await _userManager.FindByNameAsync(username);
+            var user = await _userManager.FindByNameAsync(username!);
 
             var billedOrder = (await _orderService.WhereAsync(x => x.OrderNo == request.OrderNo)).FirstOrDefault();
-            var orderWorkpoint = await _workpointService.GetByIdAsync(billedOrder.WorkPointId);
+            var orderWorkpoint = await _workpointService.GetByIdAsync(billedOrder!.WorkPointId);
             var workpointCompany = (await _companyService.WhereAsync(x => x.Id == orderWorkpoint.CompanyId)).FirstOrDefault();
 
             if (request.Status == Enums.OrderStatus.Initializata.ToString())
@@ -67,7 +64,7 @@ namespace Api2.Controllers
             {
                 request.CreatedBy = user.Id;
                 request.WorkpointName = orderWorkpoint.Name;
-                request.CompanyName = workpointCompany.Name;
+                request.CompanyName = workpointCompany!.Name;
 
                 var billEntity = request.ToBillEntity(username);
                 await _billService.AddAsync(billEntity);
@@ -86,7 +83,7 @@ namespace Api2.Controllers
         }
 
         [HttpGet]
-        //[Authorize]
+        [Authorize]
         [Route("getBills")]
         public async Task<IActionResult> GetBillsAsync()
         {
@@ -109,9 +106,9 @@ namespace Api2.Controllers
         }
 
         [HttpGet]
-        //[Authorize]
-        [Route("getBillDetails/{orderId}")]
-        public async Task<IActionResult> GetBillDetailsAsync(int orderId)
+        [Authorize]
+        [Route("getBillDetails")]
+        public async Task<IActionResult> GetBillDetailsAsync([FromQuery] int orderId)
         {
             var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -128,7 +125,7 @@ namespace Api2.Controllers
                 Quantity = op.Quantity
             }).ToList();
 
-            var billDetails = BillMapper.ToBillDetailsDTO(order, orderWorkpoint.Name, workpointCompany.Name, productsWithQuantity);
+            var billDetails = BillMapper.ToBillDetailsDTO(order, orderWorkpoint.Name, workpointCompany!.Name, productsWithQuantity);
 
 
             return new JsonResult(billDetails);

@@ -20,13 +20,12 @@ namespace Api2.Mapping
             };
         }
 
-        public static OrderDetailsDTO ToOrderDetailsDTO(Order order, DateTime dateCreated, List<ProductWithQuantity> products)
+        public static OrderDetailsDTO ToOrderDetailsDTO(Order order, List<ProductWithQuantity> products)
         {
             return new OrderDetailsDTO()
             {
                 Id = order.Id,
                 OrderNo = order.OrderNo,
-                DateCreated = dateCreated,
                 OrderType = order.OrderType,
                 WorkPointId = order.WorkPointId,
                 TotalPrice = order.TotalPrice,

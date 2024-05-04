@@ -8,6 +8,11 @@ namespace Core.Constants
 {
     public static class ErrorMessages
     {
+        public static readonly string NotAuthorized = "Nu esti autorizat sa accesezi aceste resurse.";
+        public static readonly string CompanyNotFound = "Compania cautata nu exista.";
+        public static readonly string WorkpointNotFound = "Punctul de lucru cautat nu exista.";
+        public static readonly string ProductNotFound = "Produsul cautat nu exista.";
+
         public static readonly string InvalidCui = "Cui-ul introdus nu este valid.";
         public static readonly string ExistingCui = "Exista deja o companie cu acest Cui.";
         public static readonly string ExistingCompanyName = "Exista deja o companie cu acest nume.";
@@ -29,7 +34,7 @@ namespace Core.Constants
         public static readonly string OrderStatusError = "Statusul comenzilor procesate nu mai poate fi modificat.";
         public static readonly string FileFormatError = "Formatul fisierului este invalid.";
         public static readonly string AvailableStockError = "Verifica stocul disponibil pentru produsele din comanda.";
-        public static readonly string ProductNotFound = "Produs invalid.";
+        public static readonly string InvalidProduct = "Produs invalid.";
         public static readonly string UpdateStockError = "A aparut o eroare la actualizarea stocului.";
 
         public static readonly string ExistingProduct = "Exista deja un produs cu acest nume.";
