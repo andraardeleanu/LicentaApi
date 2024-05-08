@@ -16,10 +16,4 @@
     <PackageReference Include="PDFsharp" Version="6.0.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="Templates\BillTemplate.docx">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
 </Project>

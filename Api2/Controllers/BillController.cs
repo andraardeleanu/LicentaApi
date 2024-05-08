@@ -127,7 +127,6 @@ namespace Api2.Controllers
 
             var billDetails = BillMapper.ToBillDetailsDTO(order, orderWorkpoint.Name, workpointCompany!.Name, productsWithQuantity);
 
-
             return new JsonResult(billDetails);
         }
     }
