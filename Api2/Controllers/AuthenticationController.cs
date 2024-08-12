@@ -230,18 +230,15 @@ namespace Api2.Controllers
 
             else
             {
-                else
-                {
-                    customer!.FirstName = customerRequest.Firstname;
-                    customer.LastName = customerRequest.Lastname;
-                    customer.Email = customerRequest.Email;
+                customer!.FirstName = customerRequest.Firstname;
+                customer.LastName = customerRequest.Lastname;
+                customer.Email = customerRequest.Email;
 
-                    await _userManager.UpdateAsync(customer);
+                await _userManager.UpdateAsync(customer);
 
-                    var customerResponse = new CustomerResponse { CustomerId = customer.Id, CompanyId = customer.CompanyId };
+                var customerResponse = new CustomerResponse { CustomerId = customer.Id, CompanyId = customer.CompanyId };
 
-                    return Ok(new Result<CustomerResponse>(customerResponse));
-                }
+                return Ok(new Result<CustomerResponse>(customerResponse));
             }
         }
 
