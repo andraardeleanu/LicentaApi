@@ -230,9 +230,6 @@ namespace Api2.Controllers
 
             else
             {
-                var existingUser = await _userManager.FindByNameAsync(customerRequest.Username);
-                if (existingUser != null) return BadRequest(new Result(ErrorMessages.ExistingUsername));
-
                 else
                 {
                     customer!.FirstName = customerRequest.Firstname;
