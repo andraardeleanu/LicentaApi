@@ -215,16 +215,15 @@ namespace Api2.Controllers
         }
 
         [HttpPost]
-        [Authorize]
+        //[Authorize]
         [Route("updateCustomer")]
         public async Task<IActionResult> UpdateCustomerAsync([FromBody] UpdateCustomerRequest customerRequest)
         {
             var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var user = await _userManager.FindByNameAsync(username!);
             var customer = await _userManager.FindByIdAsync(customerRequest.Id);
 
             if (string.IsNullOrWhiteSpace(customerRequest.Firstname) || string.IsNullOrWhiteSpace(customerRequest.Lastname)
-                || string.IsNullOrWhiteSpace(customerRequest.Username) || string.IsNullOrWhiteSpace(customerRequest.Email))
+                || string.IsNullOrWhiteSpace(customerRequest.Email))
             {
                 return BadRequest(new Result(ErrorMessages.AllFieldsAreMandatory));
             }
@@ -238,7 +237,6 @@ namespace Api2.Controllers
                 {
                     customer!.FirstName = customerRequest.Firstname;
                     customer.LastName = customerRequest.Lastname;
-                    customer.UserName = customerRequest.Username;
                     customer.Email = customerRequest.Email;
 
                     await _userManager.UpdateAsync(customer);
