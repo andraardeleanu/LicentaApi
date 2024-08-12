@@ -150,6 +150,7 @@ namespace Api2.Controllers
 
         [HttpPatch("changePassword")]
         [Authorize]
+        [Route("changePassword")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest model)
         {
             var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -176,7 +177,7 @@ namespace Api2.Controllers
         }
 
         [HttpGet]
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [Route("getUserByUsername")]
         public async Task<IActionResult> GetUserByUsernameAsync(string username)
         {
@@ -191,7 +192,7 @@ namespace Api2.Controllers
         }
 
         [HttpGet]
-        [Authorize]
+        [Authorize(Roles = "Admin")]
         [Route("getUsers")]
         public async Task<IActionResult> GetUsersAsync()
         {
@@ -215,7 +216,7 @@ namespace Api2.Controllers
         }
 
         [HttpPost]
-        //[Authorize]
+        [Authorize]
         [Route("updateCustomer")]
         public async Task<IActionResult> UpdateCustomerAsync([FromBody] UpdateCustomerRequest customerRequest)
         {
