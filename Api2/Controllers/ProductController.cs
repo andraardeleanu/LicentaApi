@@ -1,6 +1,7 @@
 ﻿using Api2.ApiModels;
 using Api2.Mapping;
 using Api2.Requests;
+using Api2.Responses;
 using Core.Constants;
 using Core.Entities;
 using Core.Models;
@@ -20,22 +21,6 @@ namespace Api2.Controllers
         {
             _productService = productService;
             _stockService = stockService;
-        }
-
-        [HttpGet]
-        [Authorize]
-        [Route("getProducts")]
-        public async Task<IActionResult> GetProductAsync([FromQuery] NameFilterRequest productFilterRequest)
-        {
-            var products = await _productService.ListAsync();
-
-            if (productFilterRequest.Name != null)
-            {
-                products = products.FindAll(x => x.Name.Contains(productFilterRequest.Name));
-            }
-
-            var dtoList = products.Select(x => new ProductDTO(x.Id, x.Name, x.Price));
-            return new JsonResult(dtoList);
         }
 
         [HttpPost]
@@ -75,8 +60,26 @@ namespace Api2.Controllers
             };
 
             var stock = await _stockService.AddAsync(stockEntity);
-            return Ok(new Result());
+            var productResponse = new ProductResponse { ProductId = product.Id, ProductName = product.Name, StockId = stock.Id, AvailableStock = stockEntity.AvailableStock };
+
+            return Ok(new Result<ProductResponse>(productResponse));
         }
+
+        [HttpGet]
+        [Authorize]
+        [Route("getProducts")]
+        public async Task<IActionResult> GetProductAsync([FromQuery] NameFilterRequest productFilterRequest)
+        {
+            var products = await _productService.ListAsync();
+
+            if (productFilterRequest.Name != null)
+            {
+                products = products.FindAll(x => x.Name.Contains(productFilterRequest.Name));
+            }
+
+            var dtoList = products.Select(x => new ProductDTO(x.Id, x.Name, x.Price));
+            return new JsonResult(dtoList);
+        }        
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
@@ -105,7 +108,7 @@ namespace Api2.Controllers
                 return new JsonResult(entityResult);
 
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest(new Result(ErrorMessages.ProductNotFound));
             }
@@ -117,9 +120,12 @@ namespace Api2.Controllers
         public async Task<IActionResult> RemoveProductAsync(int id)
         {
             var product = await _productService.GetByIdAsync(id);
+            var stock = await _stockService.WhereAsync(x => x.ProductId == id);
             await _productService.DeleteAsync(product);
+            await _stockService.DeleteAsync(stock.FirstOrDefault()!);
 
-            return Ok();
+            var productResponse = new ProductResponse { ProductId = product.Id };
+            return Ok(new Result<ProductResponse>(productResponse));
         }
     }
 }

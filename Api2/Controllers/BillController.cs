@@ -1,6 +1,7 @@
 ﻿using Api2.ApiModels;
 using Api2.Mapping;
 using Api2.Requests;
+using Api2.Responses;
 using Core.Common;
 using Core.Constants;
 using Core.Entities;
@@ -40,46 +41,51 @@ namespace Api2.Controllers
 
         [HttpPost]
         [Route("billGenerator")]
-        public async Task<IActionResult> GenerateOrderBill([FromBody] BillRequest request)
+        public async Task<IActionResult> GenerateOrderBill([FromBody] BillGeneratorRequest request)
         {
             var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var user = await _userManager.FindByNameAsync(username!);
+            var billedOrder = (await _orderService.WhereAsync(x => x.OrderNo.ToString() == request.OrderNo.ToUpper())).FirstOrDefault();
 
-            var billedOrder = (await _orderService.WhereAsync(x => x.OrderNo == request.OrderNo)).FirstOrDefault();
+            if (billedOrder == null)
+            {
+                return BadRequest(new Result(ErrorMessages.InvalidData));
+            }
+
             var orderWorkpoint = await _workpointService.GetByIdAsync(billedOrder!.WorkPointId);
             var workpointCompany = (await _companyService.WhereAsync(x => x.Id == orderWorkpoint.CompanyId)).FirstOrDefault();
 
-            if (request.Status == Enums.OrderStatus.Initializata.ToString())
+            if (billedOrder!.Status == Enums.OrderStatus.Initializata.ToString())
             {
                 return BadRequest(new Result(ErrorMessages.OrderStatusBillError));
             }
 
-            var existingBill = await _billService.WhereAsync(x => x.OrderNo == request.OrderNo);
+            var existingBill = await _billService.WhereAsync(x => x.OrderNo.ToString() == request.OrderNo);
             if (existingBill != null && existingBill.Any())
             {
                 return BadRequest(new Result(ErrorMessages.BillInsertionError));
             }
 
-            if (request != null)
-            {
-                request.CreatedBy = user.Id;
-                request.WorkpointName = orderWorkpoint.Name;
-                request.CompanyName = workpointCompany!.Name;
+            BillRequest currentBill = new();
 
-                var billEntity = request.ToBillEntity(username);
-                await _billService.AddAsync(billEntity);
+            currentBill.OrderNo = billedOrder.OrderNo;
+            currentBill.TotalPrice = billedOrder.TotalPrice;
+            currentBill.CreatedBy = user!.Id;
+            currentBill.WorkpointName = orderWorkpoint.Name;
+            currentBill.CompanyName = workpointCompany!.Name;
+            currentBill.Status = billedOrder.Status;
+            currentBill.Products = billedOrder.OrderProduct;
 
-                billedOrder.Status = Enums.OrderStatus.Facturata.ToString();
-                billedOrder.DateUpdated = DateTime.UtcNow;
+            var billEntity = currentBill.ToBillEntity(username!);
+            await _billService.AddAsync(billEntity);
 
-                await _orderService.UpdateAsync(billedOrder);
+            billedOrder.Status = Enums.OrderStatus.Facturata.ToString();
+            billedOrder.DateUpdated = DateTime.UtcNow;
 
-                return Ok(new Result());
-            }
-            else
-            {
-                return BadRequest(new Result(ErrorMessages.InvalidData));
-            }
+            await _orderService.UpdateAsync(billedOrder);
+
+            var billResponse = new BillResponse { BillId = billEntity.Id };
+            return Ok(new Result<BillResponse>(billResponse));
         }
 
         [HttpGet]
@@ -90,12 +96,12 @@ namespace Api2.Controllers
             var bills = await _billService.ListAsync();
 
             var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var user = await _userManager.FindByNameAsync(username);
-            var role = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
+            var user = await _userManager.FindByNameAsync(username!);
+            var role = (await _userManager.GetRolesAsync(user!)).FirstOrDefault();
 
             if (role == "Customer")
             {
-                bills = bills.FindAll(x => x.CreatedBy == user.Id);
+                bills = bills.FindAll(x => x.CreatedBy == user!.Id);
             }
 
             bills = bills.OrderByDescending(x => x.DateCreated).ToList();
@@ -128,6 +134,18 @@ namespace Api2.Controllers
             var billDetails = BillMapper.ToBillDetailsDTO(order, orderWorkpoint.Name, workpointCompany!.Name, productsWithQuantity);
 
             return new JsonResult(billDetails);
+        }
+
+        [HttpDelete]
+        [Authorize(Roles = "Admin")]
+        [Route("removeBill")]
+        public async Task<IActionResult> RemoveBillAsync(int id)
+        {
+            var bill = await _billService.GetByIdAsync(id);
+            await _billService.DeleteAsync(bill);
+
+            var billResponse = new BillResponse { BillId = bill.Id };
+            return Ok(new Result<BillResponse>(billResponse));
         }
     }
 }

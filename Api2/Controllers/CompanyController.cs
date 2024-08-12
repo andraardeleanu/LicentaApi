@@ -1,6 +1,7 @@
 ﻿using Api2.ApiModels;
 using Api2.Mapping;
 using Api2.Requests;
+using Api2.Responses;
 using Core.Constants;
 using Core.Entities;
 using Core.Models;
@@ -22,41 +23,6 @@ namespace Api2.Controllers
         {
             _companyService = companyService;
             _userManager = userManager;
-        }
-
-        [HttpGet]
-        [Authorize]
-        [Route("getCompanies")]
-        public async Task<IActionResult> GetCompaniesAsync([FromQuery] NameFilterRequest companyFilterRequest)
-        {
-            var companies = await _companyService.ListAsync();
-
-            if (companyFilterRequest.Name != null)
-            {
-                companies = companies.FindAll(x => x.Name.Contains(companyFilterRequest.Name));
-            }
-
-            companies = companies.OrderByDescending(x => x.DateCreated).ToList();
-
-            var dtoList = companies.Select(x => new CompanyDTO(x.Id, x.Name, x.Cui, x.Author, x.DateCreated, x.DateUpdated));
-
-            return new JsonResult(dtoList);
-        }
-
-        [HttpGet]
-        [Authorize]
-        [Route("getCompanyById")]
-        public async Task<IActionResult> GetCompanyAsync([FromQuery] int id)
-        {
-            try
-            {
-                var company = await _companyService.GetByIdAsync(id);
-                return new JsonResult(company);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new Result(ErrorMessages.CompanyNotFound));
-            }
         }
 
         [HttpPost]
@@ -86,13 +52,49 @@ namespace Api2.Controllers
                 }
                 else
                 {
-                    var companyEntity = companyRequest.ToCompanyEntity(user.Id, username);
+                    var companyEntity = companyRequest.ToCompanyEntity(user!.Id, username);
                     var company = await _companyService.AddAsync(companyEntity);
-                    return Ok(new Result());
+                    var companyResponse = new CompanyResponse { CompanyId = companyEntity.Id, CompanyName = companyEntity.Name };
+
+                    return Ok(new Result<CompanyResponse>(companyResponse));
                 }
             }
         }
 
+        [HttpGet]
+        [Authorize]
+        [Route("getCompanyById")]
+        public async Task<IActionResult> GetCompanyAsync([FromQuery] int id)
+        {
+            try
+            {
+                var company = await _companyService.GetByIdAsync(id);
+                return new JsonResult(company);
+            }
+            catch (Exception)
+            {
+                return BadRequest(new Result(ErrorMessages.CompanyNotFound));
+            }
+        }
+
+        [HttpGet]
+        [Authorize]
+        [Route("getCompanies")]
+        public async Task<IActionResult> GetCompaniesAsync([FromQuery] NameFilterRequest companyFilterRequest)
+        {
+            var companies = await _companyService.ListAsync();
+
+            if (companyFilterRequest.Name != null)
+            {
+                companies = companies.FindAll(x => x.Name.Contains(companyFilterRequest.Name));
+            }
+
+            companies = companies.OrderByDescending(x => x.DateCreated).ToList();
+            var dtoList = companies.Select(x => new CompanyDTO(x.Id, x.Name, x.Cui, x.Author, x.DateCreated, x.DateUpdated));
+
+            return new JsonResult(dtoList);
+        }        
+       
         [HttpPost]
         [Authorize]
         [Route("updateCompany")]
@@ -121,20 +123,24 @@ namespace Api2.Controllers
 
                     await _companyService.UpdateAsync(company);
 
-                    return Ok(new Result());
-                }
+                    var companyResponse = new CompanyResponse { CompanyId = companyRequest.Id, CompanyName = company.Name };
+
+                    return Ok(new Result<CompanyResponse>(companyResponse));
+                }            
             }
         }
 
         [HttpDelete]
         [Authorize(Roles = "Admin")]
         [Route("removeCompany")]
-        public async Task<IActionResult> RemoveWorkpointAsync(int id)
+        public async Task<IActionResult> RemoveComapnyAsync(int id)
         {
             var company = await _companyService.GetByIdAsync(id);
             await _companyService.DeleteAsync(company);
 
-            return Ok();
+            var companyResponse = new CompanyResponse { CompanyId = company.Id };
+
+            return Ok(new Result<CompanyResponse>(companyResponse));
         }
     }
 }

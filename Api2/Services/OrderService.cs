@@ -4,13 +4,8 @@ using Api2.Requests;
 using Api2.Mapping;
 using Api2.Services.Interfaces;
 using Api2.ApiModels;
-using System.Linq;
 using Core.Common;
-using DocumentFormat.OpenXml.Drawing;
-using System.Runtime.CompilerServices;
 using Core.Constants;
-using Core.Models;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Api2.Services
 {

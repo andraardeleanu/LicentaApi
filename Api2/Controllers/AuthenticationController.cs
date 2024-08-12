@@ -1,11 +1,11 @@
 using Api2.ApiModels;
 using Api2.Requests;
+using Api2.Responses;
 using Core.Constants;
 using Core.Entities;
 using Core.Models;
 using Core.Services.Interfaces;
 using Infra.Data.Auth;
-using LanguageExt;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -28,34 +28,6 @@ namespace Api2.Controllers
             _userManager = userManager;
             _roleManager = roleManager;
             _companyService = companyService;
-        }
-
-        [HttpGet]
-        //[Authorize]
-        [Route("getUser")]
-        public async Task<IActionResult> GetUserDataAsync()
-        {
-            var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var user = await _userManager.FindByNameAsync(username);
-            var userRoles = await _userManager.GetRolesAsync(user);
-            var userCompanies = await _companyService.WhereAsync(c => c.Id == user.CompanyId);
-
-            return new JsonResult(new UserDTO(user.Id, user.FirstName, user.LastName, userCompanies, user.UserName, userRoles, user.Email));
-        }
-
-        [HttpGet]
-        //[Authorize]
-        [Route("getUserByUsername/{username}")]
-        public async Task<IActionResult> GetUserByUsernameAsync(string username)
-        {
-            var user = await _userManager.FindByNameAsync(username);
-
-            if (user == null) return NotFound("Nu exista niciun utilizator cu acest username. Incearca un username existent.");
-
-            var userRoles = await _userManager.GetRolesAsync(user);
-            var userCompanies = await _companyService.WhereAsync(c => c.CreatedBy == user.Id);
-
-            return new JsonResult(new UserDTO(user.Id, user.FirstName, user.LastName, userCompanies, user.UserName, userRoles, user.Email));
         }
 
         [HttpPost]
@@ -91,9 +63,48 @@ namespace Api2.Controllers
             return Ok();
         }
 
+        [HttpPost("register")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> RegisterinAsync([FromBody] RegisterRequest model)
+        {
+            if (string.IsNullOrWhiteSpace(model.Username) || string.IsNullOrWhiteSpace(model.FirstName) || string.IsNullOrWhiteSpace(model.LastName) || string.IsNullOrWhiteSpace(model.Password) || string.IsNullOrWhiteSpace(model.Email))
+            {
+                return BadRequest(new Result(ErrorMessages.AllFieldsAreMandatory));
+            }
+
+            var existingUser = await _userManager.FindByNameAsync(model.Username);
+            if (existingUser != null) return BadRequest(new Result(ErrorMessages.ExistingUsername));
+
+            try
+            {
+                var existingCompany = await _companyService.GetByIdAsync(model.CompanyId);
+            }
+            catch (Exception)
+            {
+                return BadRequest(new Result(ErrorMessages.InvalidCompany));
+            }
+
+            var appUser = new ApplicationUser
+            {
+                Email = model.Email,
+                UserName = model.Username,
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                CompanyId = model.CompanyId,
+                SecurityStamp = Guid.NewGuid().ToString(),
+            };
+            var user = await _userManager.CreateAsync(appUser, model.Password);
+
+            var role = await _userManager.AddToRoleAsync(appUser, "Customer");
+
+            var customerResponse = new CustomerResponse { CustomerId = appUser.Id, Username = appUser.UserName, CompanyId = appUser.CompanyId };
+
+            return Ok(new Result<CustomerResponse>(customerResponse));
+        }
+
         [HttpPost]
         [Route("login")]
-        public async Task<IActionResult> LoginAsync([FromBody] LoginDTO model)
+        public async Task<IActionResult> LoginAsync([FromBody] LoginRequest model)
         {
             var user = await _userManager.FindByNameAsync(model.Username);
             if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password)) return Unauthorized("Parola nu este corecta!");
@@ -136,51 +147,15 @@ namespace Api2.Controllers
             });
         }
 
-        [HttpPost("register")]
-        //[Authorize(Roles = "Admin")]
-        public async Task<IActionResult> RegisterinAsync([FromBody] RegisterDTO model)
-        {
-            if (string.IsNullOrWhiteSpace(model.Username) || string.IsNullOrWhiteSpace(model.FirstName) || string.IsNullOrWhiteSpace(model.LastName) || string.IsNullOrWhiteSpace(model.Password) || string.IsNullOrWhiteSpace(model.Email))
-            {
-                return BadRequest(new Result(ErrorMessages.AllFieldsAreMandatory));
-            }
-
-            var existingUser = await _userManager.FindByNameAsync(model.Username);
-            if (existingUser != null) return BadRequest(new Result(ErrorMessages.ExistingUsername));
-
-            try
-            {
-                var existingCompany = await _companyService.GetByIdAsync(model.CompanyId);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new Result(ErrorMessages.InvalidCompany));
-            }
-
-            var appUser = new ApplicationUser
-            {
-                Email = model.Email,
-                UserName = model.Username,
-                FirstName = model.FirstName,
-                LastName = model.LastName,
-                CompanyId = model.CompanyId,
-                SecurityStamp = Guid.NewGuid().ToString(),
-            };
-            var user = await _userManager.CreateAsync(appUser, model.Password);
-
-            var role = await _userManager.AddToRoleAsync(appUser, "Customer");
-
-            return Ok(new Result());
-        }
 
         [HttpPatch("changePassword")]
         [Authorize]
-        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDTO model)
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest model)
         {
             var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var user = await _userManager.FindByNameAsync(username);
+            var user = await _userManager.FindByNameAsync(username!);
 
-            var changePassword = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
+            var changePassword = await _userManager.ChangePasswordAsync(user!, model.OldPassword, model.NewPassword);
             if (changePassword.Succeeded)
                 return Ok();
 
@@ -188,16 +163,35 @@ namespace Api2.Controllers
         }
 
         [HttpGet]
-        //[Authorize]
-        [Route("getUsersFromCompany/{companyId}")]
-        public IActionResult GetUsersFromCompanyAsync(int companyId)
+        [Authorize]
+        [Route("getUser")]
+        public async Task<IActionResult> GetUserDataAsync()
         {
-            var companyUsers = _userManager.Users.Where(u => u.CompanyId == companyId);
-            return Ok(companyUsers);
+            var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var user = await _userManager.FindByNameAsync(username!);
+            var userRoles = await _userManager.GetRolesAsync(user!);
+            var userCompanies = await _companyService.WhereAsync(c => c.Id == user!.CompanyId);
+
+            return new JsonResult(new UserDTO(user!.Id, user.FirstName, user.LastName, userCompanies, user.UserName!, userRoles, user.Email!));
         }
 
         [HttpGet]
-        //[Authorize]
+        [Authorize]
+        [Route("getUserByUsername")]
+        public async Task<IActionResult> GetUserByUsernameAsync(string username)
+        {
+            var user = await _userManager.FindByNameAsync(username);
+
+            if (user == null) return NotFound("Nu exista niciun utilizator cu acest username. Incearca un username existent.");
+
+            var userRoles = await _userManager.GetRolesAsync(user);
+            var userCompanies = await _companyService.WhereAsync(c => c.Id == user!.CompanyId);
+
+            return new JsonResult(new UserDTO(user.Id, user.FirstName, user.LastName, userCompanies, user.UserName!, userRoles, user.Email!));
+        }
+
+        [HttpGet]
+        [Authorize]
         [Route("getUsers")]
         public async Task<IActionResult> GetUsersAsync()
         {
@@ -212,7 +206,7 @@ namespace Api2.Controllers
 
                 var userCompanies = await _companyService.WhereAsync(c => c.CreatedBy == user.Id);
 
-                var userEntity = new UserDTO(user.Id, user.FirstName, user.LastName, userCompanies, user.UserName, userRoles, user.Email);
+                var userEntity = new UserDTO(user.Id, user.FirstName, user.LastName, userCompanies, user.UserName!, userRoles, user.Email!);
 
                 resList.Add(userEntity);
             }
@@ -221,12 +215,12 @@ namespace Api2.Controllers
         }
 
         [HttpPost]
-        //[Authorize]
+        [Authorize]
         [Route("updateCustomer")]
         public async Task<IActionResult> UpdateCustomerAsync([FromBody] UpdateCustomerRequest customerRequest)
         {
             var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var user = await _userManager.FindByNameAsync(username);
+            var user = await _userManager.FindByNameAsync(username!);
             var customer = await _userManager.FindByIdAsync(customerRequest.Id);
 
             if (string.IsNullOrWhiteSpace(customerRequest.Firstname) || string.IsNullOrWhiteSpace(customerRequest.Lastname)
@@ -242,16 +236,30 @@ namespace Api2.Controllers
 
                 else
                 {
-                    customer.FirstName = customerRequest.Firstname;
+                    customer!.FirstName = customerRequest.Firstname;
                     customer.LastName = customerRequest.Lastname;
                     customer.UserName = customerRequest.Username;
                     customer.Email = customerRequest.Email;
 
                     await _userManager.UpdateAsync(customer);
 
-                    return Ok(new Result());
+                    var customerResponse = new CustomerResponse { CustomerId = customer.Id, CompanyId = customer.CompanyId };
+
+                    return Ok(new Result<CustomerResponse>(customerResponse));
                 }
             }
+        }
+
+        [HttpDelete]
+        [Authorize(Roles = "Admin")]
+        [Route("removeUser")]
+        public async Task<IActionResult> RemoveUserAsync(string id)
+        {
+            var user = await _userManager.FindByIdAsync(id);
+            await _userManager.DeleteAsync(user!);
+
+            var userResponse = new UserResponse { UserId = user!.Id };
+            return Ok(new Result<UserResponse>(userResponse));
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿using Core.Common;
-using Core.Entities;
+﻿using Core.Entities;
 
 namespace Api2.Requests
 {
@@ -11,6 +10,6 @@ namespace Api2.Requests
         public decimal TotalPrice { get; set; }
         public string WorkpointName { get; set; }
         public string CompanyName { get; set; }
-        public virtual List<Product> Products { get; set; }
+        public IEnumerable<OrderProduct> Products { get; set; }
     }
 }

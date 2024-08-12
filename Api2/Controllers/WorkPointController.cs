@@ -1,6 +1,7 @@
 ﻿using Api2.ApiModels;
 using Api2.Mapping;
 using Api2.Requests;
+using Api2.Responses;
 using Core.Constants;
 using Core.Entities;
 using Core.Models;
@@ -26,53 +27,6 @@ namespace Api2.Controllers
             _workpointService = workpointService;
             _userManager = userManager;
             _orderService = orderService;
-        }
-
-        [HttpGet]
-        [Authorize]
-        [Route("getWorkpoints")]
-        public async Task<IActionResult> GetWorkpointAsync([FromQuery] NameFilterRequest workpointFilterRequest)
-        {
-            var workpoints = await _workpointService.ListAsync();
-
-            if (workpointFilterRequest.Name != null)
-            {
-                workpoints = workpoints.FindAll(x => x.Name.Contains(workpointFilterRequest.Name));
-            }
-            var dtoList = workpoints.Select(x => new WorkPointDTO(x.Id, x.Name, x.Address, x.Author, x.CompanyId));
-            return new JsonResult(dtoList);
-        }
-
-        [HttpGet]
-        [Authorize]
-        [Route("getWorkpointById")]
-        public async Task<IActionResult> GetWorkpointByIdAsync([FromQuery] int id)
-        {
-            try
-            {
-                var workpoint = await _workpointService.GetByIdAsync(id);
-                return new JsonResult(workpoint);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new Result(ErrorMessages.WorkpointNotFound));
-            }
-        }
-
-        [HttpGet]
-        [Authorize]
-        [Route("getWorkpointsByUserId")]
-        public async Task<IActionResult> GetWorkpointsByUserIdAsync([FromQuery] string userId)
-        {
-            try
-            {
-                var userWorkpoints = await _workpointService.WhereAsync(x => x.CreatedBy == userId);
-                return Ok(userWorkpoints);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new Result(ErrorMessages.WorkpointNotFound));
-            }
         }
 
         [HttpPost]
@@ -101,13 +55,48 @@ namespace Api2.Controllers
                 }
                 else
                 {
-                    workpointRequest.CompanyId = user.CompanyId;
+                    workpointRequest.CompanyId = user!.CompanyId;
                     var workpointEntity = workpointRequest.ToWorkpointEntity(user.Id, username);
                     var workpoint = await _workpointService.AddAsync(workpointEntity);
-                    return Ok(new Result());
+
+                    var workpointResponse = new WorkpointResponse { WorkpointId = workpoint.Id, CompanyId = workpoint.CompanyId, WorkpointName = workpoint.Name };
+
+                    return Ok(new Result<WorkpointResponse>(workpointResponse));
                 }
             }
         }
+
+        [HttpGet]
+        [Authorize]
+        [Route("getWorkpointById")]
+        public async Task<IActionResult> GetWorkpointByIdAsync([FromQuery] int id)
+        {
+            try
+            {
+                var workpoint = await _workpointService.GetByIdAsync(id);
+                return new JsonResult(workpoint);
+            }
+            catch (Exception)
+            {
+                return BadRequest(new Result(ErrorMessages.WorkpointNotFound));
+            }
+        }         
+
+        [HttpGet]
+        [Authorize]
+        [Route("getWorkpointsByUserId")]
+        public async Task<IActionResult> GetWorkpointsByUserIdAsync([FromQuery] string userId)
+        {
+            try
+            {
+                var userWorkpoints = await _workpointService.WhereAsync(x => x.CreatedBy == userId);
+                return Ok(userWorkpoints);
+            }
+            catch (Exception)
+            {
+                return BadRequest(new Result(ErrorMessages.WorkpointNotFound));
+            }
+        }        
 
         [HttpPost]
         [Authorize]
@@ -115,7 +104,7 @@ namespace Api2.Controllers
         public async Task<IActionResult> UpdateCompanyAsync([FromBody] UpdateWorkpointRequest workpointRequest)
         {
             var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var user = await _userManager.FindByNameAsync(username);
+            var user = await _userManager.FindByNameAsync(username!);
             var workpoint = await _workpointService.GetByIdAsync(workpointRequest.Id);
 
             if (string.IsNullOrWhiteSpace(workpointRequest.Name) || string.IsNullOrWhiteSpace(workpointRequest.Address))
@@ -137,34 +126,26 @@ namespace Api2.Controllers
                     workpoint.DateUpdated = DateTime.UtcNow;
 
                     await _workpointService.UpdateAsync(workpoint);
-                    return Ok(new Result());
+                    var workpointResponse = new WorkpointResponse { WorkpointId = workpoint.Id, CompanyId = workpoint.CompanyId, WorkpointName = workpoint.Name };
+
+                    return Ok(new Result<WorkpointResponse>(workpointResponse));
                 }
             }
         }
 
-        [HttpPost]
+        [HttpGet]
         [Authorize]
-        [Route("removeWorkpoint")]
-        public async Task<IActionResult> RemoveWorkpointAsync([FromBody] RemoveWorkpointRequest request)
+        [Route("getWorkpoints")]
+        public async Task<IActionResult> GetWorkpointAsync([FromQuery] NameFilterRequest workpointFilterRequest)
         {
-            var workpointsOrders = await _orderService.WhereAsync(x => x.WorkPointId == request.Id);
-            if (workpointsOrders != null && workpointsOrders.Any())
+            var workpoints = await _workpointService.ListAsync();
+
+            if (workpointFilterRequest.Name != null)
             {
-                return BadRequest(new Result(ErrorMessages.CannotDeleteWorkpoint));
+                workpoints = workpoints.FindAll(x => x.Name.Contains(workpointFilterRequest.Name));
             }
-            else
-            {
-                try
-                {
-                    var workpoint = await _workpointService.GetByIdAsync(request.Id);
-                    await _workpointService.DeleteAsync(workpoint);
-                }
-                catch (Exception ex)
-                {
-                    return BadRequest(new Result(ErrorMessages.WorkpointNotFound));
-                }
-                return Ok();
-            }
+            var dtoList = workpoints.Select(x => new WorkPointDTO(x.Id, x.Name, x.Address, x.Author, x.CompanyId));
+            return new JsonResult(dtoList);
         }
 
         [HttpGet]
@@ -174,6 +155,34 @@ namespace Api2.Controllers
         {
             var companyWorkpoints = await _workpointService.WhereAsync(x => x.CompanyId == companyId);
             return Ok(companyWorkpoints);
+        }
+
+        [HttpDelete]
+        [Authorize]
+        [Route("removeWorkpoint")]
+        public async Task<IActionResult> RemoveWorkpointAsync(int id)
+        {
+            try
+            {
+                var workpointsOrders = await _orderService.WhereAsync(x => x.WorkPointId == id);
+                if (workpointsOrders != null && workpointsOrders.Any())
+                {
+                    return BadRequest(new Result(ErrorMessages.CannotDeleteWorkpoint));
+                }
+                else
+                {
+                    var workpoint = await _workpointService.GetByIdAsync(id);
+                    await _workpointService.DeleteAsync(workpoint);
+
+                    var workpointResponse = new WorkpointResponse { WorkpointId = workpoint.Id };
+
+                    return Ok(new Result<WorkpointResponse>(workpointResponse));
+                }
+            }
+            catch (Exception)
+            {
+                return BadRequest(new Result(ErrorMessages.WorkpointNotFound));
+            }
         }
     }
 }

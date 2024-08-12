@@ -1,10 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Api2.ApiModels
+namespace Api2.Requests
 {
-    public class LoginDTO
+    public class LoginRequest
     {
-
         [Required(ErrorMessage = "Username is required")]
         public string Username { get; set; }
 

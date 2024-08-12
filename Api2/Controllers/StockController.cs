@@ -1,5 +1,6 @@
 ﻿using Api2.ApiModels;
 using Api2.Requests;
+using Api2.Responses;
 using Core.Constants;
 using Core.Entities;
 using Core.Models;
@@ -83,9 +84,12 @@ namespace Api2.Controllers
 
                 await _stockService.UpdateAsync(stock);
                 var entityResult = await _stockService.GetByIdAsync(updateStockRequest.StockId);
-                return new JsonResult(entityResult);
+
+                var stockUpdateResponse = new StockResponse { StockId = stock.Id, AvailableStock = stock.AvailableStock, PendingStock = stock.PendingStock };
+
+                return Ok(new Result<StockResponse>(stockUpdateResponse));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest(new Result(ErrorMessages.InvalidData));
             }

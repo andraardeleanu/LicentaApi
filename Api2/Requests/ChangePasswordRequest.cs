@@ -1,6 +1,6 @@
-﻿namespace Api2.ApiModels
+﻿namespace Api2.Requests
 {
-    public class ChangePasswordDTO
+    public class ChangePasswordRequest
     {
         public string OldPassword { get; set; }
         public string NewPassword { get; set; }

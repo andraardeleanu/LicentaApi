@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Api2.ApiModels
+namespace Api2.Requests
 {
-    public class RegisterDTO
+    public class RegisterRequest
     {
         [Required(ErrorMessage = "First name is required!")]
         public string FirstName { get; set; }

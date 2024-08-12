@@ -13,6 +13,7 @@ using Infra.Data.Auth;
 using Core.Constants;
 using Microsoft.IdentityModel.Tokens;
 using Core.Models;
+using Api2.Responses;
 
 namespace Api2.Controllers
 {
@@ -47,12 +48,12 @@ namespace Api2.Controllers
         {
             var orders = await _orderService.ListAsync();
             var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var user = await _userManager.FindByNameAsync(username);
-            var role = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
+            var user = await _userManager.FindByNameAsync(username!);
+            var role = (await _userManager.GetRolesAsync(user!)).FirstOrDefault();
 
             if (role == "Customer")
             {
-                orders = orders.FindAll(x => x.CreatedBy == user.Id);
+                orders = orders.FindAll(x => x.CreatedBy == user!.Id);
             }
 
             if (orderRequest.Id != null)
@@ -85,7 +86,7 @@ namespace Api2.Controllers
         [HttpPost]
         [Authorize(Roles = "Admin")]
         [Route("updateOrderStatus")]
-        public async Task<IActionResult> UpdateOrderStatusAsync([FromBody] RemoveWorkpointRequest request)
+        public async Task<IActionResult> UpdateOrderStatusAsync([FromBody] UpdateOrderStatusRequest request)
         {
             try
             {
@@ -101,7 +102,7 @@ namespace Api2.Controllers
                 return Ok(new Result());
 
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest(new Result(ErrorMessages.InvalidData));
             }
@@ -156,7 +157,7 @@ namespace Api2.Controllers
             {
                 var existingWorkpoint = await _workpointService.GetByIdAsync(orderRequest.WorkPointId);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest(new Result(ErrorMessages.InvalidWorkpoint));
             }
@@ -201,7 +202,9 @@ namespace Api2.Controllers
 
                     await _orderService.UpdateAsync(orderEntity);
 
-                    return Ok(new Result());
+                    var orderResponse = new OrderResponse { Id= orderEntity.Id, OrderNo = orderEntity.OrderNo, WorkpointId = orderRequest.WorkPointId, TotalPrice = orderTotalPrice };
+
+                    return Ok(new Result<OrderResponse>(orderResponse));
                 }
                 else
                 {
@@ -219,7 +222,7 @@ namespace Api2.Controllers
             {
                 var existingWorkpoint = await _workpointService.GetByIdAsync(workPointId);
             }
-            catch (Exception ex)
+            catch (Exception)            
             {
                 return BadRequest(new Result(ErrorMessages.InvalidWorkpoint));
             }
@@ -269,9 +272,8 @@ namespace Api2.Controllers
                     {
                         var order = new OrderRequest
                         {
-                            OrderNo = Guid.NewGuid(),
                             Author = username,
-                            CreatedBy = user.Id,
+                            CreatedBy = user!.Id,
                             WorkPointId = workPointId,
                             Products = products
                         };
@@ -292,17 +294,32 @@ namespace Api2.Controllers
                             orderEntity.TotalPrice = orderTotalPrice;
 
                             await _orderService.UpdateAsync(orderEntity);
-                            return Ok(new Result());
+
+                            var orderResp = new OrderResponse { Id = orderEntity.Id, OrderNo = order.OrderNo, WorkpointId = order.WorkPointId, TotalPrice = orderTotalPrice };
+
+                            return Ok(new Result<OrderResponse>(orderResp));
                         }
                     }
                     else
                         return BadRequest(new Result(ErrorMessages.EmptyProductList));
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return BadRequest(new Result(ErrorMessages.InvalidData));
             }
+        }
+
+        [HttpDelete]
+        [Authorize(Roles = "Admin")]
+        [Route("removeOrder")]
+        public async Task<IActionResult> RemoveOrderAsync(int id)
+        {
+            var order = await _orderService.GetByIdAsync(id);
+            await _orderService.DeleteAsync(order);
+
+            var orderResponse = new OrderResponse { Id = order.Id };
+            return Ok(new Result<OrderResponse>(orderResponse));
         }
     }
 }
