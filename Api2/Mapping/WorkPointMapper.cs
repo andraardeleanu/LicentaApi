@@ -6,13 +6,13 @@ namespace Api2.Mapping
 {
     public static class WorkPointMapper
     {
-        public static WorkPoint ToWorkpointEntity(this WorkpointRequest request, string createdBy, string user)
+        public static WorkPoint ToWorkpointEntity(this WorkpointRequest request, string createdBy, string user, int companyId)
         {
             return new WorkPoint()
             {
                 Name = request.Name,
                 Address = request.Address,
-                CompanyId = request.CompanyId,
+                CompanyId = companyId,
                 CreatedBy = createdBy,
                 Author = user,
                 DateCreated = DateTime.Now,

@@ -17,14 +17,17 @@ namespace Api2.Controllers
     public class WorkPointController : ControllerBase
     {
         private readonly IGenericService<WorkPoint> _workpointService;
+        private readonly IGenericService<Company> _companyService;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IGenericService<Order> _orderService;
 
         public WorkPointController(IGenericService<WorkPoint> workpointService,
+            IGenericService<Company> companyService,
             UserManager<ApplicationUser> userManager,
             IGenericService<Order> orderService)
         {
             _workpointService = workpointService;
+            _companyService = companyService;
             _userManager = userManager;
             _orderService = orderService;
         }
@@ -55,8 +58,7 @@ namespace Api2.Controllers
                 }
                 else
                 {
-                    workpointRequest.CompanyId = user!.CompanyId;
-                    var workpointEntity = workpointRequest.ToWorkpointEntity(user.Id, username);
+                    var workpointEntity = workpointRequest.ToWorkpointEntity(user!.Id, username, user.CompanyId);
                     var workpoint = await _workpointService.AddAsync(workpointEntity);
 
                     var workpointResponse = new WorkpointResponse { WorkpointId = workpoint.Id, CompanyId = workpoint.CompanyId, WorkpointName = workpoint.Name };
@@ -80,7 +82,7 @@ namespace Api2.Controllers
             {
                 return BadRequest(new Result(ErrorMessages.WorkpointNotFound));
             }
-        }         
+        }
 
         [HttpGet]
         [Authorize]
@@ -96,7 +98,7 @@ namespace Api2.Controllers
             {
                 return BadRequest(new Result(ErrorMessages.WorkpointNotFound));
             }
-        }        
+        }
 
         [HttpPost]
         [Authorize]
@@ -163,7 +165,7 @@ namespace Api2.Controllers
         public async Task<IActionResult> RemoveWorkpointAsync(int id)
         {
             try
-            {
+                {
                 var workpointsOrders = await _orderService.WhereAsync(x => x.WorkPointId == id);
                 if (workpointsOrders != null && workpointsOrders.Any())
                 {
