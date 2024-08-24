@@ -106,7 +106,7 @@ namespace Api2.Controllers
 
             bills = bills.OrderByDescending(x => x.DateCreated).ToList();
 
-            var dtoList = bills.Select(x => new BillsDTO(x.Author, x.DateCreated, x.OrderNo, x.WorkpointName, x.CompanyName, x.TotalPrice, x.Status));
+            var dtoList = bills.Select(x => new BillsDTO(x.Id, x.Author, x.DateCreated, x.OrderNo, x.WorkpointName, x.CompanyName, x.TotalPrice, x.Status));
 
             return new JsonResult(dtoList);
         }
