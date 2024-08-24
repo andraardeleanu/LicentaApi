@@ -9,6 +9,6 @@ namespace Api2.ApiModels
         public string CompanyName { get; set; }
         public decimal TotalPrice { get; set; }
         public string Status { get; set; }
-        public List<ProductWithQuantity> Products;
+        public List<ProductWithQuantity> Products { get; set; }
     }
 }
