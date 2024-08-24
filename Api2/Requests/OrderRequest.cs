@@ -12,7 +12,7 @@ namespace Api2.Requests
     {
         public Guid OrderNo { get; set; }
         public string? Author { get; set; }
-        public required string CreatedBy { get; set; }
+        public string? CreatedBy { get; set; }
         public int WorkPointId { get; set; }
         public decimal TotalPrice { get; set; }
         public required List<ProductDetails> Products { get; set; }

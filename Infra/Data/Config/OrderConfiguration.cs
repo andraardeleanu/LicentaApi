@@ -12,3 +12,5 @@ namespace Infra.Data.Config
         }
     }
 }
+
+

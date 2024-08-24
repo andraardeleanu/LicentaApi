@@ -148,7 +148,7 @@ namespace Api2.Controllers
         }
 
 
-        [HttpPatch("changePassword")]
+        [HttpPatch]
         [Authorize]
         [Route("changePassword")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest model)
@@ -171,9 +171,9 @@ namespace Api2.Controllers
             var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var user = await _userManager.FindByNameAsync(username!);
             var userRoles = await _userManager.GetRolesAsync(user!);
-            var userCompanies = await _companyService.WhereAsync(c => c.Id == user!.CompanyId);
+            var userCompany = await _companyService.GetByIdAsync(user!.CompanyId);
 
-            return new JsonResult(new UserDTO(user!.Id, user.FirstName, user.LastName, userCompanies, user.UserName!, userRoles, user.Email!));
+            return new JsonResult(new UserDTO(user!.Id, user.FirstName, user.LastName, user.CompanyId, userCompany.Name, user.UserName!, userRoles, user.Email!));
         }
 
         [HttpGet]
@@ -186,9 +186,9 @@ namespace Api2.Controllers
             if (user == null) return NotFound("Nu exista niciun utilizator cu acest username. Incearca un username existent.");
 
             var userRoles = await _userManager.GetRolesAsync(user);
-            var userCompanies = await _companyService.WhereAsync(c => c.Id == user!.CompanyId);
+            var userCompany = await _companyService.GetByIdAsync(user!.CompanyId);
 
-            return new JsonResult(new UserDTO(user.Id, user.FirstName, user.LastName, userCompanies, user.UserName!, userRoles, user.Email!));
+            return new JsonResult(new UserDTO(user.Id, user.FirstName, user.LastName, user.CompanyId, userCompany.Name, user.UserName!, userRoles, user.Email!));
         }
 
         [HttpGet]
@@ -205,9 +205,9 @@ namespace Api2.Controllers
             {
                 var userRoles = await _userManager.GetRolesAsync(user);
 
-                var userCompanies = await _companyService.WhereAsync(c => c.CreatedBy == user.Id);
+                var userCompany = await _companyService.GetByIdAsync(user!.CompanyId);
 
-                var userEntity = new UserDTO(user.Id, user.FirstName, user.LastName, userCompanies, user.UserName!, userRoles, user.Email!);
+                var userEntity = new UserDTO(user.Id, user.FirstName, user.LastName, user.CompanyId, userCompany.Name, user.UserName!, userRoles, user.Email!);
 
                 resList.Add(userEntity);
             }

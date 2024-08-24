@@ -9,16 +9,18 @@ namespace Api2.ApiModels
         public string Id { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
-        public IList<Company> Companies { get; set; }
+        public int CompanyId { get; set; }
+        public string CompanyName { get; set; }
         public string Username { get; set; }
         public IList<string> Roles { get; set; }
         public string Email { get; set; }
-        public UserDTO(string id, string firstName, string lastName, IList<Company> companies, string username, IList<string> role, string email)
+        public UserDTO(string id, string firstName, string lastName, int companyId, string companyName, string username, IList<string> role, string email)
         {
             Id = id;
             FirstName = firstName;
             LastName = lastName;
-            Companies = companies;
+            CompanyId = companyId;
+            CompanyName = companyName;
             Username = username;
             Roles = role;
             Email = email;
