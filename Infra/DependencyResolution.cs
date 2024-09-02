@@ -1,6 +1,6 @@
-﻿using Core.Interfaces;
-using Infra.Data;
+﻿using Infra.Data;
 using Infra.Data.Repository;
+using Core.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 

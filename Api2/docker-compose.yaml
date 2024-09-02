@@ -1,0 +1,43 @@
+version: '3.4'
+
+services:
+  mynetapi:
+    image: api2 # Replace with your actual backend Docker image
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=192.168.1.136,1433;Database=licenta;User Id=sa;Password=Password_123#;MultipleActiveResultSets=True;TrustServerCertificate=True;
+    depends_on:
+      - mssqlserver
+    networks:
+      - mynetwork
+    ports:
+      - "5000:8080"
+      - "5001:8081" # Map container port 80 to host port 5000
+
+  mssqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      SA_PASSWORD: "Password_123#"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    networks:
+      - mynetwork
+    volumes:
+      - mssql_data:/var/opt/mssql
+
+  reactapp:
+    image: client # Replace with your actual React Docker image
+    ports:
+      - "3000:3000" # Map container port 80 to host port 3000
+    networks:
+      - mynetwork
+    depends_on:
+      - mynetapi
+
+networks:
+  mynetwork:
+    driver: bridge
+
+volumes:
+  mssql_data:

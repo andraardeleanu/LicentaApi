@@ -8,7 +8,9 @@ namespace Core.Constants
 {
     public static class ErrorMessages
     {
-        public static readonly string NotAuthorized = "Nu esti autorizat sa accesezi aceste resurse.";
+        public static readonly string UsernameNotFound = "Numele de utilizator este invalid.";
+        public static readonly string InvalidPassword = "Parola nu este corecta.";
+        public static readonly string NotAuthorized = "Nu esti autorizat sa accesezi aceste resurse."; 
         public static readonly string CompanyNotFound = "Compania cautata nu exista.";
         public static readonly string WorkpointNotFound = "Punctul de lucru cautat nu exista.";
         public static readonly string ProductNotFound = "Produsul cautat nu exista.";

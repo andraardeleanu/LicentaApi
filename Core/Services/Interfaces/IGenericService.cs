@@ -1,6 +1,5 @@
 ﻿using Core.Common;
 using Core.Entities;
-using Core.Interfaces;
 using System.Linq.Expressions;
 
 namespace Core.Services.Interfaces

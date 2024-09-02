@@ -1,8 +1,4 @@
-﻿using Api2.ApiModels;
-using Api2.Mapping;
-using Api2.Requests;
-using Api2.Services.Interfaces;
-using Core.Entities;
+﻿using Core.Entities;
 using Core.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,7 +9,10 @@ using Infra.Data.Auth;
 using Core.Constants;
 using Microsoft.IdentityModel.Tokens;
 using Core.Models;
-using Api2.Responses;
+using Core.Requests;
+using Core.Responses;
+using Core.Mapping;
+using Core.ApiModels;
 
 namespace Api2.Controllers
 {

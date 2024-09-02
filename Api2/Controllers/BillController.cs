@@ -1,11 +1,11 @@
-﻿using Api2.ApiModels;
-using Api2.Mapping;
-using Api2.Requests;
-using Api2.Responses;
+﻿using Core.ApiModels;
 using Core.Common;
 using Core.Constants;
 using Core.Entities;
+using Core.Mapping;
 using Core.Models;
+using Core.Requests;
+using Core.Responses;
 using Core.Services.Interfaces;
 using Infra.Data.Auth;
 using Microsoft.AspNetCore.Authorization;
@@ -120,6 +120,7 @@ namespace Api2.Controllers
 
             var order = await _orderService.GetByIdAsync(orderId);
             var orderWorkpoint = await _workpointService.GetByIdAsync(order.WorkPointId);
+            var orderCustomer = await _userManager.FindByIdAsync(order.CreatedBy);
             var workpointCompany = (await _companyService.WhereAsync(x => x.Id == orderWorkpoint.CompanyId)).FirstOrDefault();
             var orderProducts = await _orderProductService.WhereAsync(x => x.OrderId == orderId, y => y.Product);
 
@@ -131,7 +132,7 @@ namespace Api2.Controllers
                 Quantity = op.Quantity
             }).ToList();
 
-            var billDetails = BillMapper.ToBillDetailsDTO(order, orderWorkpoint.Name, workpointCompany!.Name, productsWithQuantity);
+            var billDetails = BillMapper.ToBillDetailsDTO(order, orderCustomer!.UserName!, orderWorkpoint.Name, workpointCompany!.Name, productsWithQuantity);
 
             return new JsonResult(billDetails);
         }

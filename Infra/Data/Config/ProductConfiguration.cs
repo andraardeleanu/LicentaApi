@@ -8,7 +8,7 @@ namespace Infra.Data.Config
     {
         public void Configure(EntityTypeBuilder<Product> builder)
         {
-            builder.HasKey(t => t.Id);                
+            builder.HasKey(t => t.Id);  
         }
     }
 }

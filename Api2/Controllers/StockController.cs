@@ -1,9 +1,9 @@
-﻿using Api2.ApiModels;
-using Api2.Requests;
-using Api2.Responses;
+﻿using Core.ApiModels;
 using Core.Constants;
 using Core.Entities;
 using Core.Models;
+using Core.Requests;
+using Core.Responses;
 using Core.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

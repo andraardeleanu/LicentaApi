@@ -1,8 +1,11 @@
 ﻿using Core.Entities;
 using Infra.Data.Auth;
 using Infra.Data.Config;
+using Infra.Migrations;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 namespace Infra.Data
 {
@@ -13,9 +16,9 @@ namespace Infra.Data
             : base(options)
         {
         }
-        
+
         public DbSet<Bill> Bills { get; set; }
-        public DbSet<WorkPoint> WorkPoints{ get; set; }
+        public DbSet<WorkPoint> WorkPoints { get; set; }
         public DbSet<Company> Companies { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<Product> Products { get; set; }
@@ -25,7 +28,7 @@ namespace Infra.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            
+
             modelBuilder.ApplyConfiguration(new BillConfiguration());
             modelBuilder.ApplyConfiguration(new CompanyConfiguration());
             modelBuilder.ApplyConfiguration(new OrderConfiguration());

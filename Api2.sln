@@ -3,18 +3,18 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34316.72
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api2", "Api2\Api2.csproj", "{21E1AC66-01A1-4F47-A81C-A688F82F9848}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Api2", "Api2\Api2.csproj", "{21E1AC66-01A1-4F47-A81C-A688F82F9848}"
 	ProjectSection(ProjectDependencies) = postProject
 		{18BB524C-1908-4C1B-A186-56B549459AE2} = {18BB524C-1908-4C1B-A186-56B549459AE2}
 		{79186854-124B-475F-8CEE-DD17ACB811AC} = {79186854-124B-475F-8CEE-DD17ACB811AC}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infra", "Infra\Infra.csproj", "{79186854-124B-475F-8CEE-DD17ACB811AC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Infra", "Infra\Infra.csproj", "{79186854-124B-475F-8CEE-DD17ACB811AC}"
 	ProjectSection(ProjectDependencies) = postProject
 		{18BB524C-1908-4C1B-A186-56B549459AE2} = {18BB524C-1908-4C1B-A186-56B549459AE2}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", "{18BB524C-1908-4C1B-A186-56B549459AE2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core", "Core\Core.csproj", "{18BB524C-1908-4C1B-A186-56B549459AE2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

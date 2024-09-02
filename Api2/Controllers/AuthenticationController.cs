@@ -1,9 +1,9 @@
-using Api2.ApiModels;
-using Api2.Requests;
-using Api2.Responses;
+using Core.ApiModels;
 using Core.Constants;
 using Core.Entities;
 using Core.Models;
+using Core.Requests;
+using Core.Responses;
 using Core.Services.Interfaces;
 using Infra.Data.Auth;
 using Microsoft.AspNetCore.Authorization;
@@ -32,13 +32,14 @@ namespace Api2.Controllers
 
         [HttpPost]
         [Route("addAdmin")]
-        public async Task<IActionResult> AddAdmin(string username)
+        public async Task<IActionResult> AddAdmin()
         {
             var user = new ApplicationUser
             {
+                Id= "4e7b6dc6-b6ef-4f6c-b9ca-c0a132fcd572",
                 Email = "admin@licenta.com",
                 SecurityStamp = Guid.NewGuid().ToString(),
-                UserName = username,
+                UserName = "admin",
                 FirstName = "Andra",
                 LastName = "Donca",
                 CompanyId = 1,
@@ -49,16 +50,38 @@ namespace Api2.Controllers
                 Name = "Admin"
             };
 
+            var roleManagerResult = await _roleManager.CreateAsync(role);
+
+            var res = await _userManager.CreateAsync(user, "Admin@123");
+            var roleRes = await _userManager.AddToRoleAsync(user, "Admin");
+
+            return Ok();
+        }
+
+        [HttpPost]
+        [Route("addCustone")]
+        public async Task<IActionResult> AddCustone()
+        {
+            var user = new ApplicationUser
+            {
+                Id = "45953c90-29d1-48db-a173-ea8ab1009f1d",
+                Email = "customer@licenta.com",
+                SecurityStamp = Guid.NewGuid().ToString(),
+                UserName = "custone",
+                FirstName = "Customer",
+                LastName = "One",
+                CompanyId = 1,
+            };
+
             var customer = new IdentityRole
             {
                 Name = "Customer"
             };
 
-            var roleManagerResult = await _roleManager.CreateAsync(role);
-            var roleManager2Result = await _roleManager.CreateAsync(customer);
+            var roleManagerResult = await _roleManager.CreateAsync(customer);
 
             var res = await _userManager.CreateAsync(user, "Admin@123");
-            var roleRes = await _userManager.AddToRoleAsync(user, "Admin");
+            var roleRes = await _userManager.AddToRoleAsync(user, "Customer");
 
             return Ok();
         }
@@ -107,7 +130,8 @@ namespace Api2.Controllers
         public async Task<IActionResult> LoginAsync([FromBody] LoginRequest model)
         {
             var user = await _userManager.FindByNameAsync(model.Username);
-            if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password)) return Unauthorized("Parola nu este corecta!");
+            if(user == null) return Unauthorized(ErrorMessages.UsernameNotFound);
+            if (!await _userManager.CheckPasswordAsync(user, model.Password)) return Unauthorized(ErrorMessages.InvalidPassword);
             var authClaims = new List<Claim>
             {
                 new(JwtRegisteredClaimNames.Sub, user.UserName),

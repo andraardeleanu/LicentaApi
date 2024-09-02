@@ -1,10 +1,10 @@
-﻿using Api2.ApiModels;
-using Api2.Mapping;
-using Api2.Requests;
-using Api2.Responses;
+﻿using Core.ApiModels;
 using Core.Constants;
 using Core.Entities;
+using Core.Mapping;
 using Core.Models;
+using Core.Requests;
+using Core.Responses;
 using Core.Services.Interfaces;
 using Infra.Data.Auth;
 using Microsoft.AspNetCore.Authorization;
