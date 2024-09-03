@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infra.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240829083545_ConfigureStoredProcedures")]
-    partial class ConfigureStoredProcedures
+    [Migration("20240902145818_Configure_StoredProducedures")]
+    partial class Configure_StoredProducedures
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

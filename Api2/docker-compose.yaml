@@ -5,7 +5,7 @@ services:
     image: api2 # Replace with your actual backend Docker image
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=192.168.1.136,1433;Database=licenta;User Id=sa;Password=Password_123#;MultipleActiveResultSets=True;TrustServerCertificate=True;
+      - ConnectionStrings__DefaultConnection=Server=192.168.1.134,1433;Database=licenta;User Id=sa;Password=Password_123#;MultipleActiveResultSets=True;TrustServerCertificate=True;
     depends_on:
       - mssqlserver
     networks:

@@ -5,7 +5,7 @@
 namespace Infra.Migrations
 {
     /// <inheritdoc />
-    public partial class ConfigureStoredProcedures : Migration
+    public partial class Configure_StoredProducedures : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -94,6 +94,7 @@ namespace Infra.Migrations
 				if(@Id IS NOT NULL)
 				BEGIN
 					DELETE FROM Products WHERE Id=@Id;
+					DELETE FROM Stocks WHERE ProductId=@Id;
 				END
 				ELSE
 					SELECT -1;
